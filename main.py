@@ -3,47 +3,58 @@ import numpy as np
 import warnings
 import os, glob
 import xlwt
+
 pd.set_option('display.max_columns', None)
 
-def soil_parameters(df):
-    Pa = 101.325
 
-    # Add new columns to homogenized excel files to calculate Ic values
-    new_columns = ['qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)",
-                   "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq","cu_14", "M", "k0_1", 'k0_2', "Vs R",
-                   'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs', "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I',
+def soil_parameters(df):
+    Pa = 101.325  # Atmospheric pressure in kPa
+
+    # /////////////////////////////////////////////// COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Add new columns for each of the soil parameters
+    new_columns = ['qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
+                   "Effective Stress (kPa)",
+                   "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq", "cu_14", "M", "k0_1",
+                   'k0_2', "Vs R",
+                   'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs', "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J',
+                   'Dr I',
                    'Cn2', "qc1", 'qc2', 'error2']
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
-    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', 'qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)",
-         "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K',
-         'cu_bq','cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs', "φ' M", "φ' U",
-         'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Cn2', "qc1", 'qc2', 'error2', "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]',
-         'u [si/no]', 'preforo [m]']]
 
-    # "qc calc" and "qt calc" columns created to turn negative values into 0 and converting units for our calculations without editing the raw data
+    # Reorder the columns
+    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', 'qc calc', 'qt calc', 'Qt', "Rf (%)",
+             "Gamma (kN/m^3)",
+             "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R',
+             'OCR K',
+             'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs',
+             "φ' M", "φ' U",
+             'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Cn2', "qc1", 'qc2', 'error2', "Unnamed: 5", 'GWT [m]',
+             'Date of CPT [gg/mm/aa]',
+             'u [si/no]', 'preforo [m]']]
+    # /////////////////////////////////////////////// end COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    # ///////////////////////////////////////////// GENERAL CALCULATIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # "qc calc" and "qt calc" columns created to change bad data into numbers our equations can handle. Units are also converted
     df['qc calc'] = df['qc (MPa)'] * 1000
     df['qt calc'] = df['qt (MPa)'] * 1000
     for i in range(len(df.index)):
         row = df.loc[i].copy(deep=False)
         if row['qc calc'] <= 0:
-            df.at[i,'qc calc'] = float('NaN')
+            df.at[i, 'qc calc'] = float('NaN')
         if row['qt calc'] <= 0:
-            df.at[i,'qt calc'] = float('NaN')
-
+            df.at[i, 'qt calc'] = float('NaN')
 
     # Rf calc
     def calcRf(fs, qt_calc):
         if fs < 0.00001:
             return 0
-        elif np.isnan(qt_calc) == True:
+        elif np.isnan(qt_calc):
             return 0
         else:
             return np.divide(fs, qt_calc) * 100
 
-
     df['Rf (%)'] = [calcRf(x, y) for x, y in zip(df['fs (kPa)'], df['qt calc'])]
-
 
     # Gamma calc
     def calcGamma(Rf, qt_calc):
@@ -51,7 +62,6 @@ def soil_parameters(df):
             return 18.08  # default gamma value when there's a pre-hole
         else:
             return 9.81 * (0.27 * np.log10(Rf) + 0.36 * np.log10(qt_calc / Pa) + 1.236)
-
 
     df['Gamma (kN/m^3)'] = [calcGamma(x, y) for x, y in zip(df['Rf (%)'], df["qt calc"])]
 
@@ -71,7 +81,7 @@ def soil_parameters(df):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-    # Fr calcuation
+            # Fr calcuation
             if row['fs (kPa)'] <= 0:
                 df.at[i, 'Fr (%)'] = 0
             else:
@@ -80,12 +90,11 @@ def soil_parameters(df):
     else:
         warnings.warn('GWT marked as 0 or not provided on ' + str(filename))
 
-
-
     # Qt calculation
     df['Qt'] = [(x - y) / z for x, y, z in zip(df["qt calc"], df["Total Stress (kPa)"], df['Effective Stress (kPa)'])]
+    # ///////////////////////////////////////////// end GENERAL CALCULATIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-    # Ic calculation Rollins
+    # ////////////////////////////////////////////// Ic CALCULATION \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     df['n1'] = 1  # Use 1 as the first guess for n
     tolerance = 0.01  # Define the Ic iteration tolerance here
     counter = False
@@ -116,39 +125,51 @@ def soil_parameters(df):
                 df.at[i, 'n2'] = 1
             else:
                 df.at[i, 'n2'] = temp
+
         # Calculate the error and set n2 as n1 for further iterations
         df['error'] = df['n1'] - df['n2']
         df['n1'] = df['n2']
 
-        counter1 = True
         # Check to see if every row meets our error tolerance. If not, repeat the process
+        counter1 = True
         for i in range(len(df.index)):
             row = df.loc[i]
             if row['Ic'] > 0 and row['error'] > tolerance:
                 counter1 = False
                 break
-
         counter = counter1
+    # /////////////////////////////////////////// end Ic CALCULATION \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-    # Dr calculation Idriss and Boulanger 2008
-    df['qc1'] = df['qc calc']
+    # //////////////////////////////// Dr CALCULATION Idriss and Boulanger 2008 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    df['qc1'] = df['qc calc']  # Set recorded qc values as initial qc1n guess
     tolerance = 0.01  # Define the Dr iteration tolerance here
 
     counter = False
-    it_counter = 0
+    it_counter = 0  # Create variable to count the number of iterations
 
-    while counter == False:
+    while not counter:
+        # Cn calculation
         df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** (1.338 - .249 * df['qc1'] ** .264)
+
+        # New qcn1 calculation
         df['qc2'] = df['Cn2'] * df['qc calc'] / Pa
+
+        # Dr calculation
         df['Dr I'] = .478 * df['qc1'] ** .264 - 1.063
+
+        # Find error between guess and new qcn1 calculation
         df['error2'] = np.abs(df['qc1'] - df['qc2'])
 
+        # Set new qc1n calculation as new guess for next iteration
         df['qc1'] = df['qc2']
 
+        # Count the number of iterations
         it_counter += 1
 
+        # Check to see if every row meets our error tolerance. If not, repeat the process.
+        # If there have been more than 100 iterations, set the value to "No Solution"
         counter1 = True
-        # Check to see if every row meets our error tolerance. If not, repeat the process
         for i in range(len(df.index)):
             row = df.loc[i]
             if it_counter == 100:
@@ -158,19 +179,19 @@ def soil_parameters(df):
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
                     break
-
         counter = counter1
 
-    # Cohesive Layer Properties
-    # OCR calculations
+    # //////////////////////////////////// end Dr CALCULATION Idriss and Boulanger 2008 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    # //////////////////////////////////////////// COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    # ---------------------------------------- OCR calculations --------------------------------------------------------
     # Robertson 2009
     def calcOCR_R(Ic, Qt):
         if Ic >= 2.6:
             return .25 * Qt ** 1.25
 
-
     df['OCR R'] = [calcOCR_R(x, y) for x, y in zip(df['Ic'], df['Qt'])]
-
 
     # Kulkawy and Mayne 1990
     def calcOCR_K(Ic, Qt):
@@ -178,9 +199,10 @@ def soil_parameters(df):
         if Ic >= 2.6 and Qt < 20:
             return k * Qt
 
-
     df['OCR K'] = [calcOCR_K(x, y) for x, y in zip(df['Ic'], df['Qt'])]
+    # -----------------------------------end OCR calculations ----------------------------------------------------------
 
+    # Begin for loop to perform cell based calculations
     for i in range(len(df.index)):
         row = df.loc[i]
         if row['Ic'] >= 2.6:
@@ -188,10 +210,10 @@ def soil_parameters(df):
         if row['Ic'] == 0:
             df.at[i, 'Dr I'] = float('NaN')
 
-        if row["Ic"] >= 2.6:
+        if row["Ic"] >= 2.6:  # Check the soil type
 
-        # cu calculations Lunne et al. 1997
-            # Anagnostopoulos et al. 2003
+            # --------------------------- cu calculations --------------------------------------------------------------
+            # Mayne & Peuchen 2018
             GWT = df.loc[0]['GWT [m]']
             if row['Depth (m)'] >= GWT:
                 u0 = (row['Depth (m)'] - GWT) * 9.81
@@ -202,20 +224,25 @@ def soil_parameters(df):
                 Bq = -0.009999999
             Nkt = 10.5 - 4.6 * np.log(Bq + 0.1)
             df.at[i, 'cu_bq'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
-            df.at[i, 'cu_14'] = (row['qt calc'] - row['Total Stress (kPa)']) / 14  # Dr. Rollins wanted to use a set value of Nkt = 14 in addition to the bq calc since he is unfamiliar with bq
+            df.at[i, 'cu_14'] = (row['qt calc'] - row[
+                'Total Stress (kPa)']) / 14  # Dr. Rollins wanted to use a set value of Nkt = 14 in addition to the bq calc since he is unfamiliar with bq
+            # -------------------------- end cu calculations -----------------------------------------------------------
 
-        # M calculations
+            # ----------------------------- M calculations -------------------------------------------------------------
             # Robertson 2009. From what I can tell from the paper, M is in MPa
             if row['Qt'] >= 14:
                 df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
             else:
                 df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
+            # ------------------------------- end M calculations -------------------------------------------------------
 
-        # k0 calculations Kulhway and Mayne 1990
+            # -------------------------------k0 calculations -----------------------------------------------------------
+            # Kulhway and Mayne 1990
             df.at[i, 'k0_1'] = (row['qt calc'] - row['Total Stress (kPa)']) / row['Effective Stress (kPa)'] * .1
             df.at[i, 'k0_2'] = 0.5 * (row['OCR R']) ** 0.5
+            # -------------------------------end k0 calculations -------------------------------------------------------
 
-        # Vs calculation
+            # ------------------------------- Vs calculation -----------------------------------------------------------
             # Robertson 2009
             avs = 10 ** (0.55 * row['Ic'] + 1.68)
             if (avs * (row['qt calc'] - row['Total Stress (kPa)'])) > 0:
@@ -224,17 +251,18 @@ def soil_parameters(df):
             # Mayne 2006
             if row['fs (kPa)'] > 0:
                 df.at[i, 'Vs M'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
+            # ---------------------------------end Vs calculation ------------------------------------------------------
 
-        # k for permeability from Robertson 2015
+            # --------------------------------k for permeability -------------------------------------------------------
+            # Robertson 2015
             if row['Ic'] < 3.27:
                 df.at[i, 'k (m/s)'] = 10 ** (.952 - 3.04 * row['Ic'])
             if row['Ic'] > 3.27 and row['Ic'] < 4:
                 df.at[i, 'k (m/s)'] = 10 ** (-4.52 - 1.37 * row['Ic'])
+            # --------------------------------end k for permeability ---------------------------------------------------
 
-        # ψ state parameter calculation from Robertson 2010
-        #     df.at[i, 'ψ'] = (5.581 * row['Ic'] ** 3 - 0.403 * row['Ic'] ** 4 - 21.63 * row['Ic'] ** 2 + 33.75 * row['Ic'] - 17.88) * ((row['qt calc'] - row['Total Stress (kPa)']) / Pa) * (Pa / row['Effective Stress (kPa)']) ** (0.381 * row['Ic'] + 0.05 * (row['Effective Stress (kPa)'] / Pa) - 0.15)
-
-            # φ' Mayne 2006
+            # ------------------------------- φ' calculation -----------------------------------------------------------
+            # Mayne 2006
             GWT = df.loc[0]['GWT [m]']
             if row['Depth (m)'] >= GWT:
                 u0 = (row['Depth (m)'] - GWT) * 9.81
@@ -247,20 +275,21 @@ def soil_parameters(df):
                 Bq = 1
             if row['Qt'] > 0:
                 df.at[i, "φ' M"] = 29.5 * Bq ** 0.121 * (0.256 + 0.336 * Bq + np.log10(row['Qt']))
-            # if row["φ' M"] > 40:
-            #   df.at[i,"φ' M"] = 40
-            # elif row["φ' M"] < 20:
-            #   df.at[i,"φ' M"] = 20
+            # ----------------------------- end φ' calculation ---------------------------------------------------------
+    # /////////////////////////////////////// end COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-    # Non-cohesive Layer Properties
-
+    # /////////////////////////////////////// NON-COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Begin for loop to perform cell based calculations
     for i in range(len(df.index)):
         row = df.loc[i]
-        if row['Ic'] < 2.6 and row['Ic'] > 0:
-        # φ' calculation
+        if row['Ic'] < 2.6 and row['Ic'] > 0:  # Check the soil type. Ic == 0 means there's not data.
+
+            # ---------------------------------------- φ' calculation --------------------------------------------------
             # Robertson and Campanella 1983
             if row['qc calc'] > 0:
-                df.at[i, "φ' R"] = np.degrees(np.arctan(1 / 2.68 * (np.log10(row['qc calc'] / row['Effective Stress (kPa)']) + 0.29)))
+                df.at[i, "φ' R"] = np.degrees(
+                    np.arctan(1 / 2.68 * (np.log10(row['qc calc'] / row['Effective Stress (kPa)']) + 0.29)))
+
             # Kulhawy and Mayne 1990
             df.at[i, "φ' K"] = 17.6 + 11 * np.log10(row['Qtn'])
 
@@ -271,37 +300,43 @@ def soil_parameters(df):
                 Kc = 1.0
             elif row['Ic'] > 1.64 and row['Ic'] <= 2.5:
                 Kc = 5.58 * (row["Ic"]) ** 3 - 0.403 * (row["Ic"]) ** 4 - 21.63 * (row["Ic"]) ** 2 + 33.75 * (
-                row["Ic"]) - 17.88
+                    row["Ic"]) - 17.88
             else:
                 Kc = 6 * 10 ** -7 * row['Ic'] ** 16.76
             df.at[i, "φ' J"] = 33 + 15.84 * (
                 np.log10(Kc * row['Qtn'])) - 26.88  # Used a φ'cv value of 33 degrees per Dr. Rollins' instructions
 
-            df.at[i, 'Qtn,cs'] = Kc * row['Qtn']
+            # df.at[i, 'Qtn,cs'] = Kc * row['Qtn'] -------- if we want to check Qtn,cs values for checking here you go
 
             # Uzielli, Mayne, and Cassidy 2013
             df.at[i, "φ' U"] = 25 * (row['qt calc'] / (row['Effective Stress (kPa)']) ** 0.5) ** 0.1
+            # ------------------------------------- end φ' calculation -------------------------------------------------
 
-        # DR calculation
+            # ------------------------------------------- DR calculation -----------------------------------------------
             # Baldi et al. 1986      ******WEIRD NUMBERS**********
             C0, C2 = 15.7, 2.41  # For moderately compressible, normally consolidated, unaged and uncemented, predominantly quartz sands the constants are: C0 = 15.7 and C2 = 2.41
             Qcn = (row['qc calc'] / Pa) / (row['Effective Stress (kPa)'] / Pa) ** 0.5
             df.at[i, 'Dr B'] = (1 / C2) * np.log(Qcn / C0)
 
             # Kulhawy and Mayne 1990
-            df.at[i, 'Dr K'] = (row[
-                                    'Qtn'] / 350) ** 0.5  # Used the Qtn/350 simplification of this equation per Dr. Rollins' instructions since we don't have the needed information for the non-simplified version of the equation
+            df.at[i, 'Dr K'] = (row['Qtn'] / 350) ** 0.5  # Used the Qtn/350 simplification of this equation per
+                                                          # Dr. Rollins' instructions since we don't have the needed
+                                                          # information for the non-simplified version of the equation
 
             # Jamiolkowski et al. 2003
             c0 = 17.68
             c1 = 0.5
             c2 = 3.10
-            df.at[i, 'Dr J'] = 1 / c2 * np.log((row['qt calc'] / Pa) / (c0 * (row['Effective Stress (kPa)'] / Pa) ** c1))
+            df.at[i, 'Dr J'] = 1 / c2 * np.log(
+                (row['qt calc'] / Pa) / (c0 * (row['Effective Stress (kPa)'] / Pa) ** c1))
+            # -------------------------------------- end DR calculation ------------------------------------------------
 
-        # ψ state parameter calculation from Robertson 2010
+            # ---------------------------------- ψ state parameter calculation -----------------------------------------
+            # Robertson 2010
             df.at[i, 'ψ'] = 0.56 - 0.33 * np.log10(Kc * row['Qtn'])
+            # ---------------------------------- end  ψ state parameter calculation ------------------------------------
 
-        # Vs calculation
+            # ------------------------------------- Vs calculation -----------------------------------------------------
             # Robertson 2009
             avs = 10 ** (0.55 * row['Ic'] + 1.68)
             df.at[i, 'Vs R'] = (avs * (row['qt calc'] - row['Total Stress (kPa)']) / Pa) ** 0.5
@@ -309,26 +344,31 @@ def soil_parameters(df):
             # Mayne 2006
             if row['fs (kPa)'] > 0:
                 df.at[i, 'Vs M'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
+            # ------------------------------------- end Vs calculation -------------------------------------------------
 
-        # k for permeability from Robertson 2010
+            # --------------------------------- k for permeability -----------------------------------------------------
+            # Robertson 2010
             df.at[i, 'k (m/s)'] = 10 ** (0.952 - 3.04 * row['Ic'])
+            # --------------------------------- end k for permeability -------------------------------------------------
+    # //////////////////////////////////////// end NON-COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-    df.drop(['qc calc','qt calc','Qt','n1','Cn','Qtn','n2','error','qc1','qc2','error2','Cn2','Qtn,cs'], axis=1,inplace=True)
+    # Delete columns that stored variables for calculations but that we don't want in the final spreadsheet
+    df.drop(['qc calc', 'qt calc', 'Qt', 'n1', 'Cn', 'Qtn', 'n2', 'error', 'qc1', 'qc2', 'error2', 'Cn2', 'Qtn,cs'],
+            axis=1, inplace=True)
     return df
+
 
 folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     df = pd.read_excel(filename)
     df = soil_parameters(df)
-    filename = filename.replace("5. CPTU standard excel (1685 items)","Calculated Soil Parameters (trial 1)")
+    filename = filename.replace("5. CPTU standard excel (1685 items)", "Calculated Soil Parameters (trial 1)")
     ending = filename[-1]
     if ending == 'x':
         df.to_excel(filename, index=False)
     else:
-        filename = filename.replace('.xls','.xlsx')
+        filename = filename.replace('.xls', '.xlsx')
         df.to_excel(filename, index=False)
-
-
 
 # df = pd.read_excel(r"C:\Users\jdundas2\Documents\Code Checks\Mirabello Italy check sheet.xlsx")
 # df = soil_parameters(df)
