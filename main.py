@@ -350,6 +350,21 @@ def soil_parameters(df):
             # Robertson 2010
             df.at[i, 'k (m/s)'] = 10 ** (0.952 - 3.04 * row['Ic'])
             # --------------------------------- end k for permeability -------------------------------------------------
+
+            # ----------------------------------------- M --------------------------------------------------------------
+            # Robertson 2009. From what I can tell from the paper, M is in MPa
+            if row['Ic'] > 2.2:
+                if row['Qt'] >= 14:
+                    df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
+                else:
+                    df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
+            else:
+                am = 0.0188*(10**(0.55*row['Ic'] + 1.68))
+                df.at[i,'M'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
+            # ------------------------------------- end M --------------------------------------------------------------
+        elif row['Ic'] == 0:
+            df.at[i,'Ic'] = float('NaN')
+
     # //////////////////////////////////////// end NON-COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     # Delete columns that stored variables for calculations but that we don't want in the final spreadsheet
@@ -358,17 +373,18 @@ def soil_parameters(df):
     return df
 
 
-folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
-for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
-    df = pd.read_excel(filename)
-    df = soil_parameters(df)
-    filename = filename.replace("5. CPTU standard excel (1685 items)", "Calculated Soil Parameters (trial 1)")
-    ending = filename[-1]
-    if ending == 'x':
-        df.to_excel(filename, index=False)
-    else:
-        filename = filename.replace('.xls', '.xlsx')
-        df.to_excel(filename, index=False)
+#
+# folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
+# for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
+#     df = pd.read_excel(filename)
+#     df = soil_parameters(df)
+#     filename = filename.replace("5. CPTU standard excel (1685 items)", "Calculated Soil Parameters (trial 1)")
+#     ending = filename[-1]
+#     if ending == 'x':
+#         df.to_excel(filename, index=False)
+#     else:
+#         filename = filename.replace('.xls', '.xlsx')
+#         df.to_excel(filename, index=False)
 
 # df = pd.read_excel(r"C:\Users\jdundas2\Documents\Code Checks\Mirabello Italy check sheet.xlsx")
 # df = soil_parameters(df)
