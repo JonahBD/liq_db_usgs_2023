@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 import warnings
-import os, glob
-import xlwt
 
 pd.set_option('display.max_columns', None)
 
@@ -88,7 +86,7 @@ def soil_parameters(df):
                 df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
                     float)
     else:
-        warnings.warn('GWT marked as 0 or not provided on ' + str(filename))
+        warnings.warn('GWT marked as 0 or not provided')
 
     # Qt calculation
     df['Qt'] = [(x - y) / z for x, y, z in zip(df["qt calc"], df["Total Stress (kPa)"], df['Effective Stress (kPa)'])]
@@ -99,7 +97,7 @@ def soil_parameters(df):
     tolerance = 0.01  # Define the Ic iteration tolerance here
     counter = False
 
-    while counter == False:
+    while not counter:
         # Calculate Cn
         df['Cn'] = (Pa / df['Effective Stress (kPa)']) ** df['n1']
         df['Cn'] = [1.7 if x >= 1.7 else x for x in df['Cn']]
@@ -257,7 +255,7 @@ def soil_parameters(df):
             # Robertson 2015
             if row['Ic'] < 3.27:
                 df.at[i, 'k (m/s)'] = 10 ** (.952 - 3.04 * row['Ic'])
-            if row['Ic'] > 3.27 and row['Ic'] < 4:
+            if 3.27 < row['Ic'] < 4:
                 df.at[i, 'k (m/s)'] = 10 ** (-4.52 - 1.37 * row['Ic'])
             # --------------------------------end k for permeability ---------------------------------------------------
 
@@ -282,7 +280,7 @@ def soil_parameters(df):
     # Begin for loop to perform cell based calculations
     for i in range(len(df.index)):
         row = df.loc[i]
-        if row['Ic'] < 2.6 and row['Ic'] > 0:  # Check the soil type. Ic == 0 means there's not data.
+        if 2.6 > row['Ic'] > 0:  # Check the soil type. Ic == 0 means there's not data.
 
             # ---------------------------------------- φ' calculation --------------------------------------------------
             # Robertson and Campanella 1983
@@ -296,9 +294,9 @@ def soil_parameters(df):
             # Jefferies and Been 2006
             if row['Ic'] <= 1.64:
                 Kc = 1.0
-            elif row['Ic'] > 1.64 and row['Ic'] < 2.36 and row['Fr (%)'] < 0.5:
+            elif 1.64 < row['Ic'] < 2.36 and row['Fr (%)'] < 0.5:
                 Kc = 1.0
-            elif row['Ic'] > 1.64 and row['Ic'] <= 2.5:
+            elif 1.64 < row['Ic'] <= 2.5:
                 Kc = 5.58 * (row["Ic"]) ** 3 - 0.403 * (row["Ic"]) ** 4 - 21.63 * (row["Ic"]) ** 2 + 33.75 * (
                     row["Ic"]) - 17.88
             else:
@@ -320,8 +318,8 @@ def soil_parameters(df):
 
             # Kulhawy and Mayne 1990
             df.at[i, 'Dr K'] = (row['Qtn'] / 350) ** 0.5  # Used the Qtn/350 simplification of this equation per
-                                                          # Dr. Rollins' instructions since we don't have the needed
-                                                          # information for the non-simplified version of the equation
+            # Dr. Rollins' instructions since we don't have the needed
+            # information for the non-simplified version of the equation
 
             # Jamiolkowski et al. 2003
             c0 = 17.68
@@ -359,11 +357,11 @@ def soil_parameters(df):
                 else:
                     df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
             else:
-                am = 0.0188*(10**(0.55*row['Ic'] + 1.68))
-                df.at[i,'M'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
+                am = 0.0188 * (10 ** (0.55 * row['Ic'] + 1.68))
+                df.at[i, 'M'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
             # ------------------------------------- end M --------------------------------------------------------------
         elif row['Ic'] == 0:
-            df.at[i,'Ic'] = float('NaN')
+            df.at[i, 'Ic'] = float('NaN')
 
     # //////////////////////////////////////// end NON-COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -372,20 +370,185 @@ def soil_parameters(df):
             axis=1, inplace=True)
     return df
 
+# input df must have PGA and Liquefaction values already defined
+def FSliq(df, Magnitude_20may, Magnitude_29may):
+    Pa = 101.325
+    new_columns = ['qc1n', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
+                   'CRR_29may', "FS_20may", "FS_29may"]
+    df_new_columns = pd.DataFrame(columns=new_columns)
+    df = pd.concat([df, df_new_columns], axis=1)
+    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
+             "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
+             'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
+             "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n','Kσ', 'rd_20may', 'rd_29may', "CSR_20may",
+             "CRR_20may", 'CSR_29may', 'CRR_29may', "FS_20may", "FS_29may",
+             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
 
-#
-# folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
-# for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
-#     df = pd.read_excel(filename)
-#     df = soil_parameters(df)
-#     filename = filename.replace("5. CPTU standard excel (1685 items)", "Calculated Soil Parameters (trial 1)")
-#     ending = filename[-1]
-#     if ending == 'x':
-#         df.to_excel(filename, index=False)
-#     else:
-#         filename = filename.replace('.xls', '.xlsx')
-#         df.to_excel(filename, index=False)
+    # FSliq part
+    MSF_20may = 6.9 * np.exp(-Magnitude_20may / 4) - .058
+    if MSF_20may > 1.8:
+        MSF_20may = 1.8
+    MSF_29may = 6.9 * np.exp(-Magnitude_29may / 4) - .058
+    if MSF_29may > 1.8:
+        MSF_29may = 1.8
 
-# df = pd.read_excel(r"C:\Users\jdundas2\Documents\Code Checks\Mirabello Italy check sheet.xlsx")
-# df = soil_parameters(df)
-# df.to_excel(r"C:\Users\jdundas2\Documents\Code Checks\Mirabello final check with calcs.xlsx", index=False)
+    # Calculating K sigma
+    for i in range(len(df.index)):
+        row = df.loc[i]  # this takes a screenshot
+        if row['Dr I'] == 'No Solution' :
+            df.at[i, 'qc1n'] = float('NaN')
+        else:
+            df.at[i, 'qc1n'] = ((row['Dr I'] + 1.063) / .478) ** (1 / .264)  # from Dr I iterative calc (we backcalculate here)
+        row = df.loc[i]
+
+        if 2.6 > row["Ic"] > 0:
+
+            c_sigma = 1 / (37.3 - 8.27 * row['qc1n'] ** .264)
+            if c_sigma > .3:
+                c_sigma = .3
+
+            Kσ = 1 - c_sigma * np.log(row["Effective Stress (kPa)"] / Pa)
+            if Kσ > 1.1:
+                Kσ = 1.1
+            df.at[i, 'Kσ'] = Kσ
+
+            # Calculating rd
+            alpha = -1.012 - 1.126 * np.sin(
+                row['Depth (m)'] / 11.73 + 5.133)  # rd is only good for depths less than 20 meters (pg 68)
+            beta = .106 + .118 * np.sin(row['Depth (m)'] / 11.28 + 5.142)
+            if row['Depth (m)'] < 20:
+                df.at[i, 'rd_20may'] = np.exp(alpha + beta * Magnitude_20may)
+                df.at[i, 'rd_29may'] = np.exp(alpha + beta * Magnitude_29may)
+
+            row = df.loc[i]
+
+            # Calcuating CSR
+            g = 1  # should we divide by 9.81?
+            df.at[i, "CSR_20may"] = .65 * df.loc[0, "PGA_20may"] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_20may"] / MSF_20may / row['Kσ']
+            df.at[i, "CSR_29may"] = .65 * df.loc[0, "PGA_29may"] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_29may"] / MSF_29may / row['Kσ']
+
+            row = df.loc[i]
+
+            # Calcuatig CRR
+            FC = 80 * (row['Ic']) - 137
+            if FC > 100:
+                FC = 100
+            elif FC < 0:
+                FC = 0
+            qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
+            # print(MSF_20may,row["Kσ"],i)
+            df.at[i, "CRR_20may"] = np.exp(
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_20may / row[
+                                        "Kσ"]
+
+            df.at[i, "CRR_29may"] = np.exp(
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_29may / row[
+                                        "Kσ"]
+
+            row = df.loc[i]
+
+            # FS liq
+            df.at[i, "FS_20may"] = row['CRR_20may'] / row['CSR_20may']
+            df.at[i, "FS_29may"] = row['CRR_29may'] / row['CSR_29may']
+
+    return df
+
+
+# calculates h2 as the thickness of the shallowest liquefiable layer greater than 0.3 meters
+def h1_h2_basic (df, depth_column_name, FS_column_name):
+  # Initialize variables
+  current_depth = None
+  start_depth = None
+  h2_thickness = 0
+  h1_thickness = df.iloc[-1][depth_column_name]
+
+
+  # Iterate through the DataFrame
+  for index, row in df.iterrows():
+      depth = row[depth_column_name]
+      FS = row[FS_column_name]
+      if FS == '':
+          FS = float('NaN')
+
+      if FS < 1 and (current_depth is None or depth - current_depth <= 0.3):# replace current_depth with start_depth
+          # FS value found and consistent with the previous depth
+          current_depth = depth
+          if start_depth is None:
+            start_depth = depth
+            if index == 0:
+              h1_index = 0
+            else:
+              h1_index = index - 1
+      else:
+          # FS value is not present or not consistent
+          if current_depth is not None and current_depth - start_depth > 0.3:
+            h2_thickness = current_depth - start_depth
+            # Store the thickness as 'H1' in another part of the DataFrame
+            h1_thickness = df.loc[h1_index][depth_column_name]
+            # print('H1 thickness: ' + str(h1_thickness))
+            # print('H2 thickness: ' + str(h2_thickness))
+            break
+
+          # Reset variables for the next consistent layer
+          current_depth = None
+          start_depth = None
+  return [h1_thickness, h2_thickness]
+
+# calculates h2 as the summation of all liquefiable layers for depths less than 10 meters
+def h1_h2_cumulative(df, depth_column_name, FS_column_name):
+    # Initialize variables
+    current_depth = None
+    start_depth = None
+    h2_thickness = 0
+    h1_thickness = 10
+
+    # Iterate through the DataFrame
+    for index, row in df.iterrows():
+        depth = row[depth_column_name]
+        FS = row[FS_column_name]
+        if FS == '':
+            FS = float('NaN')
+
+        if FS < 1 and (current_depth is None or depth - current_depth <= 0.3):  # replace current_depth with start_depth
+            # FS value found and consistent with the previous depth
+            current_depth = depth
+            if start_depth is None:
+                start_depth = depth
+                if index == 0:
+                    h1_index = 0
+                else:
+                    h1_index = index - 1
+        else:
+            # FS value is not present or not consistent
+            if current_depth is not None and current_depth - start_depth > 0.3:
+                # Store the thickness as 'H1' in another part of the DataFrame
+                h1_thickness = df.loc[h1_index][depth_column_name]
+                break
+
+            # Reset variables for the next consistent layer
+            current_depth = None
+            start_depth = None
+
+    for index, row in df.iterrows():
+        depth = row[depth_column_name]
+        FS = row[FS_column_name]
+        if FS == '':
+            FS = float('NaN')
+        if 0 < FS < 1 and depth <= 10:
+            if index == 0 and depth > 0.05:
+                # print(df.loc[index+1][depth_column_name] - depth, depth)
+                h2_thickness += df.loc[index + 1][depth_column_name] - depth
+            elif index == 0 and depth <= 0.05:
+                # print(depth - 0, depth)
+                h2_thickness += depth - 0
+            else:
+                # print(depth - df.loc[index-1][depth_column_name], depth)
+                h2_thickness += depth - df.loc[index - 1][depth_column_name]
+        if depth > 10:
+            break
+
+    # print('H1 thickness: ' + str(h1_thickness))
+    # print('H2 thickness: ' + str(h2_thickness))
+    return [h1_thickness, h2_thickness]
