@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
 import os, glob
-from main import soil_parameters
+from functions import soil_parameters
 
 
 def ordMag(number):
