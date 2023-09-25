@@ -370,8 +370,18 @@ def soil_parameters(df):
             axis=1, inplace=True)
     return df
 
+def PGA_insertion(df,PGA_filepath, site):
+    pga = pd.read_excel(PGA_filepath)
+    pga.set_index('site',inplace=True)
+    df.at[0,'PGA_20may'] = pga.loc[site]['PGA_20may']
+    df.at[0,'PGA_29may'] = pga.loc[site]['PGA_29may']
+    df.at[0,'Liquefaction'] = pga.loc[site]['Liquefaction']
+    return df
+    # for index, row in pga.iterrows():
+    #     print(row['site'])
+
 # input df must have PGA and Liquefaction values already defined
-def FSliq(df, Magnitude_20may, Magnitude_29may):
+def FS_liq(df, Magnitude_20may, Magnitude_29may):
     Pa = 101.325
     new_columns = ['qc1n', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
                    'CRR_29may', "FS_20may", "FS_29may"]

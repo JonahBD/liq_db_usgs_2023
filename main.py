@@ -2,17 +2,21 @@ from functions import *
 import pandas as pd
 import glob, os
 
+counter = 0
+df_name = []
 
 folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
-    df.name = os.path.basename(filename).rstrip(".xls")
     df = pd.read_excel(filename)
+    site = os.path.basename(filename).rstrip(".xls")
 
     df = soil_parameters(df)
-    df = FSliq(df, 6.1, 5.9)
+    df = PGA_insertion(df,r"C:\Users\jdundas2\Documents\all current sites.xlsx", site)
+    df = FS_liq(df, 6.1, 5.9)
 
     basic_20may = h1_h2_basic(df, 'Depth (m)', 'FS_20may')
     basic_29may = h1_h2_basic(df, 'Depth (m)', 'FS_29may')
+    print(basic_20may)
 
     cumulative_20may = h1_h2_cumulative(df, 'Depth (m)', 'FS_20may')
     cumulative_29may = h1_h2_cumulative(df, 'Depth (m)', 'FS_29may')
