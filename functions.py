@@ -4,6 +4,7 @@ import warnings
 
 pd.set_option('display.max_columns', None)
 
+global error
 
 def soil_parameters(df):
     Pa = 101.325  # Atmospheric pressure in kPa
@@ -371,14 +372,13 @@ def soil_parameters(df):
     return df
 
 def PGA_insertion(df,PGA_filepath, site):
+
     pga = pd.read_excel(PGA_filepath)
     pga.set_index('site',inplace=True)
     df.at[0,'PGA_20may'] = pga.loc[site]['PGA_20may']
     df.at[0,'PGA_29may'] = pga.loc[site]['PGA_29may']
     df.at[0,'Liquefaction'] = pga.loc[site]['Liquefaction']
     return df
-    # for index, row in pga.iterrows():
-    #     print(row['site'])
 
 # input df must have PGA and Liquefaction values already defined
 def FS_liq(df, Magnitude_20may, Magnitude_29may):
@@ -507,7 +507,13 @@ def h1_h2_basic (df, depth_column_name, FS_column_name):
           # Reset variables for the next consistent layer
           current_depth = None
           start_depth = None
-  return [h1_thickness, h2_thickness]
+
+  h1_column_name = "h1_basic" + FS_column_name.lstrip("FS")
+  h2_columnn_name = "h2_basic" + FS_column_name.lstrip("FS")
+  df.at[0,h1_column_name] = h1_thickness
+  df.at[0,h2_columnn_name] = h2_thickness
+
+  return df
 
 # calculates h2 as the summation of all liquefiable layers for depths less than 10 meters
 def h1_h2_cumulative(df, depth_column_name, FS_column_name):
@@ -562,6 +568,9 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
         if depth > 10:
             break
 
-    # print('H1 thickness: ' + str(h1_thickness))
-    # print('H2 thickness: ' + str(h2_thickness))
-    return [h1_thickness, h2_thickness]
+    h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
+    h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
+    df.at[0, h1_column_name] = h1_thickness
+    df.at[0, h2_columnn_name] = h2_thickness
+
+    return df

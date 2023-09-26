@@ -4,6 +4,7 @@ import glob, os
 
 counter = 0
 df_name = []
+error = False
 
 folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\5. CPTU standard excel (1685 items)"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
@@ -11,26 +12,20 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     site = os.path.basename(filename).rstrip(".xls")
 
     df = soil_parameters(df)
-    df = PGA_insertion(df,r"C:\Users\jdundas2\Documents\all current sites.xlsx", site)
+    try:
+        df = PGA_insertion(df,r"C:\Users\jdundas2\Documents\all current sites.xlsx", site)
+    except KeyError:
+        print("The PGA doesn't exists for this site: " + site)
+        continue
     df = FS_liq(df, 6.1, 5.9)
 
-    basic_20may = h1_h2_basic(df, 'Depth (m)', 'FS_20may')
-    basic_29may = h1_h2_basic(df, 'Depth (m)', 'FS_29may')
-    print(basic_20may)
+    df = h1_h2_basic(df, 'Depth (m)','FS_20may')
+    df = h1_h2_basic(df, 'Depth (m)', 'FS_29may')
+    df = h1_h2_cumulative(df, 'Depth (m)', 'FS_20may')
+    df = h1_h2_cumulative(df, 'Depth (m)', 'FS_29may')
 
-    cumulative_20may = h1_h2_cumulative(df, 'Depth (m)', 'FS_20may')
-    cumulative_29may = h1_h2_cumulative(df, 'Depth (m)', 'FS_29may')
-
-    df.at[0,'h1_basic_20may'] = basic_20may[0]
-    df.at[0, 'h2_basic_20may'] = basic_20may[1]
-    df.at[0,'h1_cumulative_20may'] = cumulative_20may[0]
-    df.at[0,'h2_cumulative_20may'] = cumulative_20may[1]
-
-    df.at[0, 'h1_basic_29may'] = basic_29may[0]
-    df.at[0, 'h2_basic_29may'] = basic_29may[1]
-    df.at[0, 'h1_cumulative_29may'] = cumulative_29may[0]
-    df.at[0, 'h2_cumulative_29may'] = cumulative_29may[1]
-
-    filename = filename.replace('Calculated PGA', 'h1 h2 calcs')
+    filename = filename.replace('5. CPTU standard excel (1685 items)', 'polished')
+    if filename[-1] == 's':
+        filename = filename.replace('xls', 'xlsx')
 
     df.to_excel(filename, index=False)
