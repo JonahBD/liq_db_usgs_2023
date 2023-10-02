@@ -1,10 +1,7 @@
 import pandas as pd
 import numpy as np
 import warnings
-
-pd.set_option('display.max_columns', None)
-
-global error
+import scipy.integrate as integrate
 
 def soil_parameters(df):
     Pa = 101.325  # Atmospheric pressure in kPa
@@ -21,16 +18,6 @@ def soil_parameters(df):
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
-    # Reorder the columns
-    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', 'qc calc', 'qt calc', 'Qt', "Rf (%)",
-             "Gamma (kN/m^3)",
-             "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R',
-             'OCR K',
-             'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs',
-             "φ' M", "φ' U",
-             'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Cn2', "qc1", 'qc2', 'error2', "Unnamed: 5", 'GWT [m]',
-             'Date of CPT [gg/mm/aa]',
-             'u [si/no]', 'preforo [m]']]
     # /////////////////////////////////////////////// end COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     # ///////////////////////////////////////////// GENERAL CALCULATIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -387,12 +374,6 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
                    'CRR_29may', "FS_20may", "FS_29may"]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
-    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
-             "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
-             'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
-             "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n','Kσ', 'rd_20may', 'rd_29may', "CSR_20may",
-             "CRR_20may", 'CSR_29may', 'CRR_29may', "FS_20may", "FS_29may",
-             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
 
     if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
         df.at[1, 'preforo [m]'] = 'preforo is below GWT'
@@ -436,7 +417,7 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
             row = df.loc[i]
 
             # Calcuating CSR
-            g = 1  # should we divide by 9.81?
+            g = 1
             df.at[i, "CSR_20may"] = .65 * df.loc[0, "PGA_20may"] / g * row["Total Stress (kPa)"] / row[
                 "Effective Stress (kPa)"] * row["rd_20may"] / MSF_20may / row['Kσ']
             df.at[i, "CSR_29may"] = .65 * df.loc[0, "PGA_29may"] / g * row["Total Stress (kPa)"] / row[
@@ -557,16 +538,15 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
             FS = float('NaN')
         if 0 < FS < 1 and depth <= 10:
             if index == 0 and depth > 0.05:
-                # print(df.loc[index+1][depth_column_name] - depth, depth)
                 h2_thickness += df.loc[index + 1][depth_column_name] - depth
             elif index == 0 and depth <= 0.05:
-                # print(depth - 0, depth)
-                h2_thickness += depth - 0
+                h2_thickness += depth
             else:
-                # print(depth - df.loc[index-1][depth_column_name], depth)
                 h2_thickness += depth - df.loc[index - 1][depth_column_name]
         if depth > 10:
             break
+
+            # TODO measure non liquefiable layer after h2 ends
 
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
@@ -574,3 +554,47 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
     df.at[0, h2_columnn_name] = h2_thickness
 
     return df
+
+def LPI(df,depth_column_name, FS_column_name,date):
+  def Integrate_LPI(z):
+    return(1 - row[FS_column_name]) * (10 - 0.5 * z)
+
+  LPI = 0
+  for i, row in df.iterrows():
+    depth = row[depth_column_name]
+    if row[depth_column_name] <=20 and row[FS_column_name] <= 1:
+      if i == 0:
+        thick = df.loc[i + 1][depth_column_name] - depth
+        start_depth = depth - thick
+        LPI += integrate.quad(Integrate_LPI, start_depth, depth)[0]
+      else:
+
+          LPI += integrate.quad(Integrate_LPI, df.loc[i-1][depth_column_name],row[depth_column_name])[0]
+      print(depth, LPI, row[FS_column_name])
+  df.at[0,"LPI_"+date] = LPI
+
+  return df
+def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
+  def Integrate_LPIish(z):
+    c = 0
+    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
+    if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
+      c=(1-row[FS_column_name])
+    return (25.56/z)*c
+
+  LPIish = 0
+  for i, row in df.iterrows():
+    h1 = df.loc[0][h1_column_name]
+    depth = row[depth_column_name]
+    if h1 <= depth <= 20:
+      if depth < 0.4:
+        continue
+      if i == 0:
+        thick = df.loc[i+1][depth_column_name] - depth
+        start_depth = depth - thick
+        LPIish += integrate.quad(Integrate_LPIish, start_depth,depth)[0]
+      else:
+        LPIish += integrate.quad(Integrate_LPIish, df.loc[i-1][depth_column_name], depth)[0]
+  df.at[0,"LPIish_" + date] = LPIish
+
+  return df
