@@ -49,7 +49,8 @@ def soil_parameters(df):
         else:
             return 9.81 * (0.27 * np.log10(Rf) + 0.36 * np.log10(qt_calc / Pa) + 1.236)
 
-    df['Gamma (kN/m^3)'] = [calcGamma(x, y) for x, y in zip(df['Rf (%)'], df["qt calc"])]
+    df['Gamma (kN/m^3)'] = [calcGamma(x, y) for x, y in zip(df['Rf (%)'], df['qt calc'])]
+    #If you get an issue with Rf not working, it means you are overwritng a file with Rf already calced
 
     # Total Stress calculation
     df['Total Stress (kPa)'] = df['Gamma (kN/m^3)'] * df['Depth (m)']
@@ -432,6 +433,7 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
             elif FC < 0:
                 FC = 0
             qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
+            df.at[i, "qc1ncs"] = qc1ncs
             # print(MSF_20may,row["Kσ"],i)
             df.at[i, "CRR_20may"] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_20may / row[
@@ -598,3 +600,121 @@ def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
   df.at[0,"LPIish_" + date] = LPIish
 
   return df
+
+def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
+    def A1(qc1ncs):
+        return 102 * qc1ncs ** -.82
+
+    def A3(qc1ncs):
+        return 2411 * qc1ncs ** -1.45
+
+    def A5(qc1ncs):
+        return 1701 * qc1ncs ** -1.42
+
+    def A7(qc1ncs):
+        return 1690 * qc1ncs ** -1.46
+
+    def A9(qc1ncs):
+        return 1430 * qc1ncs ** -1.48
+
+    def A10(qc1ncs):
+        return 64 * qc1ncs ** -.93
+
+    def A11(qc1nc):
+        return 11 * qc1ncs ** -.65
+
+    def A12(qc1nc):
+        return 9.7 * qc1ncs ** -.69
+
+    def A13(qc1nc):
+        return 7.6 * qc1ncs ** -.71
+
+    def A14(qc1ncs):
+        return 0
+
+    def interpolator(lower_limit_FS_ev, lower_limit_FS, upper_limit_FS_ev, upper_limit_FS, FS):
+
+        range = lower_limit_FS_ev - upper_limit_FS_ev
+
+        return (upper_limit_FS - FS) * 10 * range + upper_limit_FS_ev
+
+    def Integrate_LSN(z):
+        return eps * 10 / z
+
+    below_range_counter = 0
+    LSN = 0
+    total_rows_qc1ncs_qualifies = 0
+
+
+    for i, row in df.iterrows():
+        qc1ncs = row[qc1ncs_column_name]
+        eps = np.nan
+        FS = row[FS_column_name]
+        depth = row[depth_column_name]
+        if row[depth_column_name] <= 20 and not np.isnan(qc1ncs):
+            total_rows_qc1ncs_qualifies += 1
+
+            if 20 <= qc1ncs <= 200:
+                if qc1ncs < 33:
+                    eps = 10
+                    below_range_counter += 1
+                else:
+                    eps = A1(qc1ncs)
+
+
+            if .5 <= FS <= .6 and 147 <= qc1ncs <= 200:
+                eps = interpolator(A1(qc1ncs), .5, A3(qc1ncs), .6, FS)
+
+            elif .6 <= FS <= .7 and 110 <= qc1ncs <= 200:
+                if qc1ncs < 147:
+                    eps = interpolator(eps, .6, A5(qc1ncs), .7, FS)
+                else:
+                    eps = interpolator(A3(qc1ncs), .6, A5(qc1ncs), .7, FS)
+
+            elif .7 <= FS <= .8 and 80 <= qc1ncs <= 200:
+                if qc1ncs < 110:
+                    eps = interpolator(eps, .7, A7(qc1ncs), .8, FS)
+                else:
+                    eps = interpolator(A5(qc1ncs), .7, A7(qc1ncs), .8, FS)
+
+            elif .8 <= FS <= .9 and 60 <= qc1ncs <= 200:
+                if qc1ncs < 80:
+                    eps = interpolator(eps, .8, A9(qc1ncs), .9, FS)
+                else:
+                    eps = interpolator(A7(qc1ncs), .8, A9(qc1ncs), .9, FS)
+
+            elif .9 <= FS <= 1 and 20 <= qc1ncs <= 200:  # check out these bounds and the ones below
+                if qc1ncs < 60:
+                    eps = interpolator(eps, .9, A10(qc1ncs), 1, FS)
+                else:
+                    eps = interpolator(A9(qc1ncs), .9, A10(qc1ncs), 1, FS)
+
+            elif 1 <= FS <= 1.1 and 20 <= qc1ncs <= 200:
+                eps = interpolator(A10(qc1ncs), 1, A11(qc1ncs), 1.1, FS)
+
+            elif 1.1 <= FS <= 1.2 and 20 <= qc1ncs <= 200:
+                eps = interpolator(A11(qc1ncs), 1.1, A12(qc1ncs), 1.2, FS)
+
+            elif 1.2 <= FS <= 1.3 and 20 <= qc1ncs <= 200:
+                eps = interpolator(A12(qc1ncs), 1.2, A13(qc1ncs), 1.3, FS)
+
+            elif FS >= 1.3 and 20 <= qc1ncs <= 200:
+                if FS > 2:
+                    FS = 2
+                eps = interpolator(A13(qc1ncs), 1.3, A14(qc1ncs), 2, FS)
+        # print(eps)
+
+        # df.at[i,"strain_" +date]=eps
+
+        if i == 0:
+            LSN = 0
+        elif not np.isnan(eps):
+            LSN += integrate.quad(Integrate_LSN, df.loc[i - 1][depth_column_name], depth)[0]
+            # print(df.loc[i - 1][depth_column_name],depth, eps, LSN)
+
+    df.at[0, "LSN_" + date] = LSN
+
+    percent_qc1ncs_below_range = below_range_counter/total_rows_qc1ncs_qualifies*100
+    print("Percent of qc1ncs values of out of range:" ,percent_qc1ncs_below_range,"%")
+
+    return df
