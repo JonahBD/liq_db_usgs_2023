@@ -8,7 +8,7 @@ def soil_parameters(df):
 
     # /////////////////////////////////////////////// COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     # Add new columns for each of the soil parameters
-    new_columns = ['qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
+    new_columns = ['u calc','qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
                    "Effective Stress (kPa)",
                    "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq", "cu_14", "M", "k0_1",
                    'k0_2', "Vs R",
@@ -42,6 +42,7 @@ def soil_parameters(df):
 
     df['Rf (%)'] = [calcRf(x, y) for x, y in zip(df['fs (kPa)'], df['qt calc'])]
 
+    # Effective Stress calculation
     # Gamma calc
     def calcGamma(Rf, qt_calc):
         if Rf <= 0:
@@ -60,14 +61,18 @@ def soil_parameters(df):
         df.at[i, 'Total Stress (kPa)'] = (row['Depth (m)'] - previous['Depth (m)']) * row['Gamma (kN/m^3)'] + previous[
             'Total Stress (kPa)']
 
-    # Effective Stress calculation
     if df.loc[0]['GWT [m]'] > 0:
         GWT = df.loc[0]['GWT [m]']
         df['Effective Stress (kPa)'] = df['Total Stress (kPa)']
+
+        df['u calc'] = (df['u (kPa)'] * 0).astype(float)
+
         for i in range(len(df.index)):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
+                df.at[i, 'u calc'] = ((row['Depth (m)']- GWT) * 9.81)
+                # print(type(row["u calc"]), type( row('u (kPa)')))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
                 df.at[i, 'Fr (%)'] = 0
@@ -206,7 +211,7 @@ def soil_parameters(df):
                 u0 = (row['Depth (m)'] - GWT) * 9.81
             else:
                 u0 = 0
-            Bq = (row['u (kPa)'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
+            Bq = (row['u calc'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
             if Bq <= -0.1:
                 Bq = -0.009999999
             Nkt = 10.5 - 4.6 * np.log(Bq + 0.1)
@@ -255,7 +260,7 @@ def soil_parameters(df):
                 u0 = (row['Depth (m)'] - GWT) * 9.81
             else:
                 u0 = 0
-            Bq = (row['u (kPa)'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
+            Bq = (row['u calc'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
             if Bq <= 0:
                 Bq = 0.1
             elif Bq > 1:

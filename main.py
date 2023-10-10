@@ -6,7 +6,7 @@ counter = 0
 df_name = []
 error = False
 
-folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard"
+folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     df = pd.read_excel(filename)
     site = os.path.basename(filename).rstrip(".xls")
