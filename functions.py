@@ -730,3 +730,7 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
     else:
         preforo_check = "GWT is above preforo"
     return preforo_check
+
+def date_reformatter(df, date_column):
+    date = df.loc[0][date_column]
+    return df

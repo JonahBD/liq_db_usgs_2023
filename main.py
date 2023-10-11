@@ -8,10 +8,9 @@ error = False
 
 folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
-    df = pd.read_excel(filename)
+    df = pd.read_excel(filename) #TODO make sure that dates are read in european style and not american time stamp
     site = os.path.basename(filename).rstrip(".xls")
     missing_pga = []
-    only_clay_profile_list = []
     preforo_below_GWT = []
     print(site)
 
@@ -49,16 +48,17 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
 
 
     df = LSN(df, "Depth (m)", "qc1ncs", "FS_20may", "20may")
+    df = LSN(df, "Depth (m)", "qc1ncs", "FS_29may", "29may")
 
-
-    # df = df.drop()
     # Reorder the columns
-    # df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
-    #          "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
-    #          'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
-    #          "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n','Kσ', 'rd_20may', 'rd_29may', "CSR_20may",
-    #          "CRR_20may", 'CSR_29may', 'CRR_29may', "FS_20may", "FS_29may", "LPI_20may","LPI_29may","LPIish_20may","LPIish_29may",
-    #          "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
+    df = df[['Depth (m)', 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
+             "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
+             'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
+             "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs",'Kσ', 'rd_20may', 'rd_29may', "CSR_20may",
+             "CRR_20may", 'CSR_29may', 'CRR_29may', "FS_20may", "FS_29may",'h1_basic_20may','h2_basic_20may','h1_basic_29may','h2_basic_29may',
+             'h1_cumulative_20may','h2_cumulative_20may','h1_cumulative_29may','h2_cumulative_29may', "LPI_20may","LPI_29may","LPIish_20may","LPIish_29may",
+             'LSN_20may', 'LSN_29may',
+             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
 
     filename = filename.replace('5. CPTU standard', 'test files') #TODO why does this not make a new folder like I want. I need to put the folder in, then it can work
     if filename[-1] == 's':
