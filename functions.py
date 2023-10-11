@@ -166,7 +166,9 @@ def soil_parameters(df):
             row = df.loc[i]
             if it_counter == 100:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
-                    df.at[i, 'Dr I'] = ('No Solution')
+                    with warnings.catch_warnings():
+                        warnings.simplefilter(action='ignore', category=FutureWarning)
+                        df.at[i, 'Dr I'] = ('No Solution')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
