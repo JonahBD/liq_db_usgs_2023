@@ -71,7 +71,7 @@ def soil_parameters(df):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-                df.at[i, 'u calc'] = ((row['Depth (m)']- GWT) * 9.81)
+                df.at[i, 'u calc'] = row["u (kPa)"] #TODO see if this is what we want. or change
                 # print(type(row["u calc"]), type( row('u (kPa)')))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
@@ -166,7 +166,7 @@ def soil_parameters(df):
             row = df.loc[i]
             if it_counter == 100:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
-                    df.at[i, 'Dr I'] = 'No Solution'
+                    df.at[i, 'Dr I'] = ('No Solution')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
@@ -376,7 +376,7 @@ def PGA_insertion(df,PGA_filepath, site):
 # input df must have PGA and Liquefaction values already defined
 def FS_liq(df, Magnitude_20may, Magnitude_29may):
     Pa = 101.325
-    new_columns = ['qc1n', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
+    new_columns = ['qc1n','qc1ncs', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
                    'CRR_29may', "FS_20may", "FS_29may"]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
@@ -577,7 +577,7 @@ def LPI(df,depth_column_name, FS_column_name,date):
       else:
 
           LPI += integrate.quad(Integrate_LPI, df.loc[i-1][depth_column_name],row[depth_column_name])[0]
-      print(depth, LPI, row[FS_column_name])
+      # print(depth, LPI, row[FS_column_name])
   df.at[0,"LPI_"+date] = LPI
 
   return df
@@ -707,19 +707,24 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
                 if FS > 2:
                     FS = 2
                 eps = interpolator(A13(qc1ncs), 1.3, A14(qc1ncs), 2, FS)
-        # print(eps)
-
-        # df.at[i,"strain_" +date]=eps
 
         if i == 0:
             LSN = 0
         elif not np.isnan(eps):
             LSN += integrate.quad(Integrate_LSN, df.loc[i - 1][depth_column_name], depth)[0]
-            # print(df.loc[i - 1][depth_column_name],depth, eps, LSN)
 
     df.at[0, "LSN_" + date] = LSN
 
-    percent_qc1ncs_below_range = below_range_counter/total_rows_qc1ncs_qualifies*100
-    print("Percent of qc1ncs values of out of range:" ,percent_qc1ncs_below_range,"%")
+
+    print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
 
     return df
+
+def preforo_check(df, GWT_column_name, preforo_column_name):
+    GWT_val = df.loc[0][GWT_column_name]
+    preforo_val = df.loc[0][preforo_column_name]
+    if GWT_val >= preforo_val:
+        preforo_check = "GWT is deeper than preforo"
+    else:
+        preforo_check = "GWT is above preforo"
+    return preforo_check
