@@ -433,8 +433,8 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
 
             row = df.loc[i]
 
-            # Calcuatig CRR
-            FC = 80 * (row['Ic']) - 137
+            # Calcuatig CRR #TODO make sure we are using the Idriss 2008 not the 2014 method
+            FC = 2 * 2.8 *row["Ic"]**2.6 #Taken from Emilia Romagna paper
             if FC > 100:
                 FC = 100
             elif FC < 0:
@@ -443,8 +443,7 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
             df.at[i, "qc1ncs"] = qc1ncs
             # print(MSF_20may,row["Kσ"],i)
             df.at[i, "CRR_20may"] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_20may / row[
-                                        "Kσ"]
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_20may / row["Kσ"]
 
             df.at[i, "CRR_29may"] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_29may / row[
@@ -465,6 +464,7 @@ def h1_h2_basic (df, depth_column_name, FS_column_name):
   current_depth = None
   start_depth = None
   h2_thickness = 0
+  h2_temporary = 0
   h1_thickness = df.iloc[-1][depth_column_name]
 
 
@@ -718,7 +718,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
     df.at[0, "LSN_" + date] = LSN
 
 
-    print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
+    # print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
 
     return df
 
@@ -731,6 +731,14 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
         preforo_check = "GWT is above preforo"
     return preforo_check
 
-def date_reformatter(df, date_column):
-    date = df.loc[0][date_column]
+def date_reformatter(df, date_column): #TODO finish reformatting date if needed
+
+    date = df[date_column]
+    row_index = 0
+    column_name = date_column
+    element = df.at[row_index, date_column]
+    if isinstance(element, pd.Timestamp):
+        date_change = date.dt.strftime('%m/%d/%Y')
+        df[date_column] = df[date_column].astype(str)
+        df.at[0, date_column] = date_change.loc[0]
     return df
