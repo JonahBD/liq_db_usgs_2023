@@ -566,7 +566,7 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
 
 def LPI(df,depth_column_name, FS_column_name,date):
   def Integrate_LPI(z):
-    return(1 - row[FS_column_name]) * (10 - 0.5 * z)
+    return(1 - row[FS_column_name]) * (10 - 0.5 * z) #TODO i don't think you can pull row in
 
   LPI = 0
   for i, row in df.iterrows():
@@ -586,7 +586,8 @@ def LPI(df,depth_column_name, FS_column_name,date):
 def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
   def Integrate_LPIish(z):
     c = 0
-    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
+    fs = row[FS_column_name]
+    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1 #TODO I think this is not working
     if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
       c=(1-row[FS_column_name])
     return (25.56/z)*c
@@ -738,7 +739,7 @@ def date_reformatter(df, date_column): #TODO finish reformatting date if needed
     column_name = date_column
     element = df.at[row_index, date_column]
     if isinstance(element, pd.Timestamp):
-        date_change = date.dt.strftime('%m/%d/%Y')
+        date_change = date.dt.strftime('%m/%d/%Y') #Keeping the date european
         df[date_column] = df[date_column].astype(str)
         df.at[0, date_column] = date_change.loc[0]
     return df
