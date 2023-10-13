@@ -2,16 +2,14 @@ from functions import *
 import pandas as pd
 import glob, os
 
-counter = 0
-df_name = []
+missing_pga = []
+preforo_below_GWT = []
 error = False
 
-folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive"
+folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
-    df = pd.read_excel(filename) #TODO make sure that dates are read in european style and not american time stamp
+    df = pd.read_excel(filename)
     site = os.path.basename(filename).rstrip(".xls")
-    missing_pga = []
-    preforo_below_GWT = []
     print(site)
 
     df = date_reformatter(df, 'Date of CPT [gg/mm/aa]')
@@ -68,5 +66,7 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
 
     df.to_excel(filename, index=False)
 
-print(missing_pga)
-print(preforo_below_GWT)
+pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
+preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
+exceptions_df = pd.concat([pga_df, preforo_df], axis=1)
+print(exceptions_df)

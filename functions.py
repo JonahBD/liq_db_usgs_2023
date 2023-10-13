@@ -552,6 +552,9 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
                 h2_thickness += depth
             else:
                 h2_thickness += depth - df.loc[index - 1][depth_column_name]
+
+
+
         if depth > 10:
             break
 
@@ -566,28 +569,34 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
 
 def LPI(df,depth_column_name, FS_column_name,date):
   def Integrate_LPI(z):
-    return(1 - row[FS_column_name]) * (10 - 0.5 * z) #TODO i don't think you can pull row in
+    return(1 - row[FS_column_name]) * (10 - 0.5 * z)
 
   LPI = 0
+  LPItest = 0
   for i, row in df.iterrows():
     depth = row[depth_column_name]
-    if row[depth_column_name] <=20 and row[FS_column_name] <= 1:
+    FS = row[FS_column_name]
+    if depth <=20 and FS <= 1:
       if i == 0:
         thick = df.loc[i + 1][depth_column_name] - depth
         start_depth = depth - thick
         LPI += integrate.quad(Integrate_LPI, start_depth, depth)[0]
-      else:
+        # LPItest += (1 - FS) * (10 * depth - .25 * depth ** 2) - (1 - FS) * (10 * start_depth - .25 * start_depth ** 2)
 
-          LPI += integrate.quad(Integrate_LPI, df.loc[i-1][depth_column_name],row[depth_column_name])[0]
+      else:
+          depth_before = df.loc[i - 1][depth_column_name]
+          LPI += integrate.quad(Integrate_LPI, depth_before,depth)[0]
+          # LPItest += (1-FS)*(10*depth - .25*depth**2) - (1-FS)*(10*depth_before - .25*depth_before**2)
       # print(depth, LPI, row[FS_column_name])
   df.at[0,"LPI_"+date] = LPI
+  # df.at[0, "LPItest_" + date] = LPItest
 
   return df
 def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
   def Integrate_LPIish(z):
     c = 0
     fs = row[FS_column_name]
-    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1 #TODO I think this is not working
+    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
     if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
       c=(1-row[FS_column_name])
     return (25.56/z)*c
@@ -732,7 +741,7 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
         preforo_check = "GWT is above preforo"
     return preforo_check
 
-def date_reformatter(df, date_column): #TODO finish reformatting date if needed
+def date_reformatter(df, date_column):
 
     date = df[date_column]
     row_index = 0
