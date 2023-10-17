@@ -166,9 +166,9 @@ def soil_parameters(df):
             row = df.loc[i]
             if it_counter == 100:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter(action='ignore', category=FutureWarning)
-                        df.at[i, 'Dr I'] = ('No Solution')
+                    # with warnings.catch_warnings():
+                    #     warnings.simplefilter(action='ignore', category=FutureWarning)
+                    df.at[i, 'Dr I'] = ('No Solution')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
@@ -383,8 +383,8 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
-    if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
-        df.at[1, 'preforo [m]'] = 'preforo is below GWT'
+    # if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
+    #     df.at[1, 'preforo [m]'] = 'preforo is below GWT'
 
     # FSliq part
     MSF_20may = 6.9 * np.exp(-Magnitude_20may / 4) - .058
@@ -737,6 +737,8 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
     preforo_val = df.loc[0][preforo_column_name]
     if GWT_val >= preforo_val:
         preforo_check = "GWT is deeper than preforo"
+    elif pd.isna(preforo_val):
+        preforo_check = "Nan preforo"
     else:
         preforo_check = "GWT is above preforo"
     return preforo_check

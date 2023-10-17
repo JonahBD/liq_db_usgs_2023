@@ -4,9 +4,10 @@ import glob, os
 
 missing_pga = []
 preforo_below_GWT = []
+nan_preforo = []
 error = False
 
-folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard"
+folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\exception files"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     df = pd.read_excel(filename)
     site = os.path.basename(filename).rstrip(".xls")
@@ -27,6 +28,8 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     preforo_checker = preforo_check(df, "GWT [m]", "preforo [m]")
     if preforo_checker == "GWT is above preforo":
         preforo_below_GWT.append(site)
+    elif preforo_checker == "Nan preforo":
+        nan_preforo.append(site)
 
 
     df = FS_liq(df, 6.1, 5.9)
@@ -60,7 +63,7 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
              'LSN_20may', 'LSN_29may',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
 
-    filename = filename.replace('5. CPTU standard', 'test files') #TODO why does this not make a new folder like I want. I need to put the folder in, then it can work
+    filename = filename.replace('exception files', 'ran exceptions') #TODO add OS file path to new create folder
     if filename[-1] == 's':
         filename = filename.replace('xls', 'xlsx')
 
@@ -68,5 +71,6 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
 
 pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
-exceptions_df = pd.concat([pga_df, preforo_df], axis=1)
-print(exceptions_df)
+nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
+sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df], axis=1)
+sites_to_check.to_excel("PGA and preforo exceptions.xlsx")#TODO change file path
