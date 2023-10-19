@@ -1,25 +1,38 @@
 from functions import *
 import pandas as pd
+import numpy as np
 import glob, os
+from datetime import datetime
 
 missing_pga = []
 preforo_below_GWT = []
 nan_preforo = []
-error = False
 
-folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\exception files"
-for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
+################ USER INPUTS ############################
+american_date = True # True or False
+input_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing"
+export_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing_finished"
+date_column_name = 'Date of CPT [gg/mm/aa]'
+#########################################################
+
+for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+
     df = pd.read_excel(filename)
+    date = df.loc[0][date_column_name]
+    if american_date:
+        if isinstance(date,pd.Timestamp):
+            date = date.strftime('%m') + '/' + date.strftime('%d') + '/' + date.strftime('%Y')
+    df.at[0, date_column_name] = pd.to_datetime(date, dayfirst=True)
+
     site = os.path.basename(filename).rstrip(".xls")
     print(site)
 
-    df = date_reformatter(df, 'Date of CPT [gg/mm/aa]')
+    export_folder_path_df = os.path.join(export_folder_path,site + '.xlsx')
 
     df = soil_parameters(df)
 
-
     try:
-        df = PGA_insertion(df,r"C:\Users\hf233\Documents\Italy\5. CPTU standard\GWT from CLIQ input\pga.xlsx", site)
+        df = PGA_insertion(df,r"C:\Users\jdundas2\Documents\all current sites.xlsx", site)
     except KeyError:
         print("This site is missing its PGA: " + site)
         missing_pga.append(site)
@@ -63,14 +76,11 @@ for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
              'LSN_20may', 'LSN_29may',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may','Liquefaction']]
 
-    filename = filename.replace('exception files', 'ran exceptions') #TODO add OS file path to new create folder
-    if filename[-1] == 's':
-        filename = filename.replace('xls', 'xlsx')
-
-    df.to_excel(filename, index=False)
+    df.to_excel(export_folder_path_df, index=False)
 
 pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
 nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
 sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df], axis=1)
-sites_to_check.to_excel("PGA and preforo exceptions.xlsx")#TODO change file path
+export_folder_path_check_df = os.path.join(export_folder_path,'sites_to_check.xlsx')
+sites_to_check.to_excel(export_folder_path_check_df, index=False)

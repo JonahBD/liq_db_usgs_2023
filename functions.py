@@ -42,7 +42,6 @@ def soil_parameters(df):
 
     df['Rf (%)'] = [calcRf(x, y) for x, y in zip(df['fs (kPa)'], df['qt calc'])]
 
-    # Effective Stress calculation
     # Gamma calc
     def calcGamma(Rf, qt_calc):
         if Rf <= 0:
@@ -50,8 +49,7 @@ def soil_parameters(df):
         else:
             return 9.81 * (0.27 * np.log10(Rf) + 0.36 * np.log10(qt_calc / Pa) + 1.236)
 
-    df['Gamma (kN/m^3)'] = [calcGamma(x, y) for x, y in zip(df['Rf (%)'], df['qt calc'])]
-    #If you get an issue with Rf not working, it means you are overwritng a file with Rf already calced
+    df['Gamma (kN/m^3)'] = [calcGamma(x, y) for x, y in zip(df['Rf (%)'], df["qt calc"])]
 
     # Total Stress calculation
     df['Total Stress (kPa)'] = df['Gamma (kN/m^3)'] * df['Depth (m)']
@@ -61,17 +59,18 @@ def soil_parameters(df):
         df.at[i, 'Total Stress (kPa)'] = (row['Depth (m)'] - previous['Depth (m)']) * row['Gamma (kN/m^3)'] + previous[
             'Total Stress (kPa)']
 
+    # Effective Stress calculation
     if df.loc[0]['GWT [m]'] > 0:
         GWT = df.loc[0]['GWT [m]']
         df['Effective Stress (kPa)'] = df['Total Stress (kPa)']
 
-        df['u calc'] = (df['u (kPa)'] * 0).astype(float)
+        df['u calc'] = 0
 
         for i in range(len(df.index)):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-                df.at[i, 'u calc'] = row["u (kPa)"] #TODO see if this is what we want. or change
+                df.at[i, 'u calc'] = (row['Depth (m)'] - GWT) * 9.81
                 # print(type(row["u calc"]), type( row('u (kPa)')))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
@@ -168,6 +167,7 @@ def soil_parameters(df):
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     # with warnings.catch_warnings():
                     #     warnings.simplefilter(action='ignore', category=FutureWarning)
+                    # TODO maybe delete this comment?
                     df.at[i, 'Dr I'] = ('No Solution')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
@@ -376,15 +376,15 @@ def PGA_insertion(df,PGA_filepath, site):
     return df
 
 # input df must have PGA and Liquefaction values already defined
-def FS_liq(df, Magnitude_20may, Magnitude_29may):
+def FS_liq(df, Magnitude_20may, Magnitude_29may): # FS equation from Idriss and Boulanger 2008
     Pa = 101.325
     new_columns = ['qc1n','qc1ncs', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
                    'CRR_29may', "FS_20may", "FS_29may"]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
-    # if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
-    #     df.at[1, 'preforo [m]'] = 'preforo is below GWT'
+    if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
+        df.at[1, 'preforo [m]'] = 'preforo is below GWT'
 
     # FSliq part
     MSF_20may = 6.9 * np.exp(-Magnitude_20may / 4) - .058
@@ -397,7 +397,7 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
     # Calculating K sigma
     for i in range(len(df.index)):
         row = df.loc[i]  # this takes a screenshot
-        if row['Dr I'] == 'No Solution' :
+        if row['Dr I'] == 'No Solution':
             df.at[i, 'qc1n'] = float('NaN')
         else:
             df.at[i, 'qc1n'] = ((row['Dr I'] + 1.063) / .478) ** (1 / .264)  # from Dr I iterative calc (we backcalculate here)
@@ -433,8 +433,8 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
 
             row = df.loc[i]
 
-            # Calcuatig CRR #TODO make sure we are using the Idriss 2008 not the 2014 method
-            FC = 2 * 2.8 *row["Ic"]**2.6 #Taken from Emilia Romagna paper
+            # Calcuatig CRR
+            FC = 2 * 2.8 * row["Ic"]**2.6 #Taken from Emilia Romagna paper
             if FC > 100:
                 FC = 100
             elif FC < 0:
@@ -452,8 +452,12 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
             row = df.loc[i]
 
             # FS liq
-            df.at[i, "FS_20may"] = row['CRR_20may'] / row['CSR_20may']
-            df.at[i, "FS_29may"] = row['CRR_29may'] / row['CSR_29may']
+            if row["Depth (m)"] <= df.loc[0]['GWT [m]']:
+                df.at[i, "FS_20may"] = 9999
+                df.at[i, "FS_29may"] = 9999
+            else:
+                df.at[i, "FS_20may"] = row['CRR_20may'] / row['CSR_20may']
+                df.at[i, "FS_29may"] = row['CRR_29may'] / row['CSR_29may']
 
     return df
 
@@ -461,10 +465,9 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may):
 # calculates h2 as the thickness of the shallowest liquefiable layer greater than 0.3 meters
 def h1_h2_basic (df, depth_column_name, FS_column_name):
   # Initialize variables
-  current_depth = None
-  start_depth = None
+  last_liq_depth = None
+  start_liq_depth = None
   h2_thickness = 0
-  h2_temporary = 0
   h1_thickness = df.iloc[-1][depth_column_name]
 
 
@@ -475,28 +478,19 @@ def h1_h2_basic (df, depth_column_name, FS_column_name):
       if FS == '':
           FS = float('NaN')
 
-      if FS < 1 and (current_depth is None or depth - current_depth <= 0.3):# replace current_depth with start_depth
-          # FS value found and consistent with the previous depth
-          current_depth = depth
-          if start_depth is None:
-            start_depth = depth
+      if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
+          last_liq_depth = depth
+          if start_liq_depth is None:
+            start_liq_depth = depth
             if index == 0:
               h1_index = 0
             else:
               h1_index = index - 1
       else:
-          # FS value is not present or not consistent
-          if current_depth is not None and current_depth - start_depth > 0.3:
-            h2_thickness = current_depth - start_depth
-            # Store the thickness as 'H1' in another part of the DataFrame
+          if last_liq_depth is not None and depth - last_liq_depth > 0.3:
+            h2_thickness = last_liq_depth - start_liq_depth
             h1_thickness = df.loc[h1_index][depth_column_name]
-            # print('H1 thickness: ' + str(h1_thickness))
-            # print('H2 thickness: ' + str(h2_thickness))
             break
-
-          # Reset variables for the next consistent layer
-          current_depth = None
-          start_depth = None
 
   h1_column_name = "h1_basic" + FS_column_name.lstrip("FS")
   h2_columnn_name = "h2_basic" + FS_column_name.lstrip("FS")
@@ -552,13 +546,9 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
                 h2_thickness += depth
             else:
                 h2_thickness += depth - df.loc[index - 1][depth_column_name]
-
-
-
         if depth > 10:
             break
 
-            # TODO measure non liquefiable layer after h2 ends
 
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
@@ -572,7 +562,6 @@ def LPI(df,depth_column_name, FS_column_name,date):
     return(1 - row[FS_column_name]) * (10 - 0.5 * z)
 
   LPI = 0
-  LPItest = 0
   for i, row in df.iterrows():
     depth = row[depth_column_name]
     FS = row[FS_column_name]
@@ -581,21 +570,15 @@ def LPI(df,depth_column_name, FS_column_name,date):
         thick = df.loc[i + 1][depth_column_name] - depth
         start_depth = depth - thick
         LPI += integrate.quad(Integrate_LPI, start_depth, depth)[0]
-        # LPItest += (1 - FS) * (10 * depth - .25 * depth ** 2) - (1 - FS) * (10 * start_depth - .25 * start_depth ** 2)
-
       else:
           depth_before = df.loc[i - 1][depth_column_name]
           LPI += integrate.quad(Integrate_LPI, depth_before,depth)[0]
-          # LPItest += (1-FS)*(10*depth - .25*depth**2) - (1-FS)*(10*depth_before - .25*depth_before**2)
-      # print(depth, LPI, row[FS_column_name])
   df.at[0,"LPI_"+date] = LPI
-  # df.at[0, "LPItest_" + date] = LPItest
 
   return df
 def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
   def Integrate_LPIish(z):
     c = 0
-    fs = row[FS_column_name]
     mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
     if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
       c=(1-row[FS_column_name])
@@ -742,15 +725,3 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
     else:
         preforo_check = "GWT is above preforo"
     return preforo_check
-
-def date_reformatter(df, date_column):
-
-    date = df[date_column]
-    row_index = 0
-    column_name = date_column
-    element = df.at[row_index, date_column]
-    if isinstance(element, pd.Timestamp):
-        date_change = date.dt.strftime('%m/%d/%Y') #Keeping the date european
-        df[date_column] = df[date_column].astype(str)
-        df.at[0, date_column] = date_change.loc[0]
-    return df
