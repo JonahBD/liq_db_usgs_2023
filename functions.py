@@ -70,8 +70,8 @@ def soil_parameters(df):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-                df.at[i, 'u calc'] = (row['Depth (m)'] - GWT) * 9.81
-                # print(type(row["u calc"]), type( row('u (kPa)')))
+                df.at[i, 'u calc'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
+                # print(type(row["u (kPa)"]), type(row["u (kPa)"]))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
                 df.at[i, 'Fr (%)'] = 0
