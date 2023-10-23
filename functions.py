@@ -165,10 +165,7 @@ def soil_parameters(df):
             row = df.loc[i]
             if it_counter == 100:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
-                    # with warnings.catch_warnings():
-                    #     warnings.simplefilter(action='ignore', category=FutureWarning)
-                    # TODO maybe delete this comment?
-                    df.at[i, 'Dr I'] = ('No Solution')
+                    df.at[i, 'Dr I'] = str('No Solution')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
@@ -376,10 +373,10 @@ def PGA_insertion(df,PGA_filepath, site):
     return df
 
 # input df must have PGA and Liquefaction values already defined
-def FS_liq(df, Magnitude_20may, Magnitude_29may): # FS equation from Idriss and Boulanger 2008
+def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss and Boulanger 2008
     Pa = 101.325
-    new_columns = ['qc1n','qc1ncs', 'Kσ', 'rd_20may', 'rd_29may', "CSR_20may", "CRR_20may", 'CSR_29may',
-                   'CRR_29may', "FS_20may", "FS_29may"]
+    new_columns = ['qc1n','qc1ncs', 'Kσ', 'rd_'+date1, 'rd_'+date2, "CSR_"+date1, "CRR_"+date1, 'CSR_'+date2,
+                   'CRR_'+date2, "FS_"+date1, "FS_"+date2]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
@@ -387,12 +384,12 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may): # FS equation from Idriss and 
         df.at[1, 'preforo [m]'] = 'preforo is below GWT'
 
     # FSliq part
-    MSF_20may = 6.9 * np.exp(-Magnitude_20may / 4) - .058
-    if MSF_20may > 1.8:
-        MSF_20may = 1.8
-    MSF_29may = 6.9 * np.exp(-Magnitude_29may / 4) - .058
-    if MSF_29may > 1.8:
-        MSF_29may = 1.8
+    MSF1 = 6.9 * np.exp(-Magnitude1 / 4) - .058
+    if MSF1 > 1.8:
+        MSF1 = 1.8
+    MSF2 = 6.9 * np.exp(-Magnitude2 / 4) - .058
+    if MSF2 > 1.8:
+        MSF2 = 1.8
 
     # Calculating K sigma
     for i in range(len(df.index)):
@@ -419,17 +416,17 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may): # FS equation from Idriss and 
                 row['Depth (m)'] / 11.73 + 5.133)  # rd is only good for depths less than 20 meters (pg 68)
             beta = .106 + .118 * np.sin(row['Depth (m)'] / 11.28 + 5.142)
             if row['Depth (m)'] < 20:
-                df.at[i, 'rd_20may'] = np.exp(alpha + beta * Magnitude_20may)
-                df.at[i, 'rd_29may'] = np.exp(alpha + beta * Magnitude_29may)
+                df.at[i, 'rd_'+date1] = np.exp(alpha + beta * Magnitude1)
+                df.at[i, 'rd_'+date2] = np.exp(alpha + beta * Magnitude2)
 
             row = df.loc[i]
 
             # Calcuating CSR
             g = 1
-            df.at[i, "CSR_20may"] = .65 * df.loc[0, "PGA_20may"] / g * row["Total Stress (kPa)"] / row[
-                "Effective Stress (kPa)"] * row["rd_20may"] / MSF_20may / row['Kσ']
-            df.at[i, "CSR_29may"] = .65 * df.loc[0, "PGA_29may"] / g * row["Total Stress (kPa)"] / row[
-                "Effective Stress (kPa)"] * row["rd_29may"] / MSF_29may / row['Kσ']
+            df.at[i, "CSR_"+date1] = .65 * df.loc[0, "PGA_"+date1] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_"+date1] / MSF1 / row['Kσ']
+            df.at[i, "CSR_"+date2] = .65 * df.loc[0, "PGA_"+date2] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_"+date2] / MSF2 / row['Kσ']
 
             row = df.loc[i]
 
@@ -441,23 +438,23 @@ def FS_liq(df, Magnitude_20may, Magnitude_29may): # FS equation from Idriss and 
                 FC = 0
             qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
             df.at[i, "qc1ncs"] = qc1ncs
-            # print(MSF_20may,row["Kσ"],i)
-            df.at[i, "CRR_20may"] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_20may / row["Kσ"]
+            # print(MSF1,row["Kσ"],i)
+            df.at[i, "CRR_"+date1] = np.exp(
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF1 / row["Kσ"]
 
-            df.at[i, "CRR_29may"] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF_29may / row[
+            df.at[i, "CRR_"+date2] = np.exp(
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF2 / row[
                                         "Kσ"]
 
             row = df.loc[i]
 
             # FS liq
             if row["Depth (m)"] <= df.loc[0]['GWT [m]']:
-                df.at[i, "FS_20may"] = 9999
-                df.at[i, "FS_29may"] = 9999
+                df.at[i, "FS_"+date1] = 9999
+                df.at[i, "FS_"+date2] = 9999
             else:
-                df.at[i, "FS_20may"] = row['CRR_20may'] / row['CSR_20may']
-                df.at[i, "FS_29may"] = row['CRR_29may'] / row['CSR_29may']
+                df.at[i, "FS_"+date1] = row['CRR_'+date1] / row['CSR_'+date1]
+                df.at[i, "FS_"+date2] = row['CRR_'+date2] / row['CSR_'+date2]
 
     return df
 
@@ -579,11 +576,11 @@ def LPI(df,depth_column_name, FS_column_name,date):
 def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
   def Integrate_LPIish(z):
     c = 0
+    # print(row[depth_column_name], 5/(25.56*(1-row[FS_column_name])))
     mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
     if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
       c=(1-row[FS_column_name])
     return (25.56/z)*c
-
   LPIish = 0
   for i, row in df.iterrows():
     h1 = df.loc[0][h1_column_name]
