@@ -2,6 +2,52 @@ import pandas as pd
 import numpy as np
 import glob, os
 
+
+def user_input_columns (input_folder_path_calculated_files, depth_column_name):
+
+    df = pd.read_excel(glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*"))[0])
+    for column in df.columns:
+        print(column, df.columns.get_loc(column))
+
+#//////////////////////////////////  columns that need depth  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    columns = input('What columns do you want to include (example: 2-45,51,54): ')
+
+    selections = columns.split(',')
+
+    selected_columns = []
+
+    for selection in selections:
+        if '-' in selection:
+            start, end = map(int, selection.split('-'))
+            selected_columns.extend(df.columns[start:end + 1])
+        else:
+            selected_columns.append(df.columns[int(selection)])
+
+    column_df = df[selected_columns]
+    if column_df.columns[0] != depth_column_name:
+        column_df.insert(0,depth_column_name, df.pop(depth_column_name))
+# /////////////////////////////////// end section  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+# ////////////////////////////////// single row \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    one_row_inputs = input("what columns have only one row? (LPI,LSN...): ")
+
+    selections = one_row_inputs.split(',')
+
+    selected_columns = []
+
+    for selection in selections:
+        if '-' in selection:
+            start, end = map(int, selection.split('-'))
+            selected_columns.extend(df.columns[start:end + 1])
+        else:
+            selected_columns.append(df.columns[int(selection)])
+    single_value_columns_df = df[selected_columns] #TODO make sure this df is now only one row
+    new_df = pd.concat([column_df, single_value_columns_df], axis=1)
+# ///////////////////////////////  end section  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    return new_df, column_df, single_value_columns_df
+
+
 def finding_max_depth (input_folder_path_calculated_files):
 
     max_depth_list = []
