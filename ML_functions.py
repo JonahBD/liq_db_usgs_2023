@@ -3,49 +3,57 @@ import numpy as np
 import glob, os
 
 
-def user_input_columns (input_folder_path_calculated_files, depth_column_name):
+def user_input_columns (input_folder_path_calculated_files, depth_column_name, acceptable_list):
 
     df = pd.read_excel(glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*"))[0])
     for column in df.columns:
-        print(column, df.columns.get_loc(column))
+        print(df.columns.get_loc(column), column)
 
-#//////////////////////////////////  columns that need depth  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    columns = input('What columns do you want to include (example: 2-45,51,54): ')
+    columns = input("\nWhat columns do you want to include? Don't include the depth column. (example: 2-45,51,54): ")
 
     selections = columns.split(',')
 
-    selected_columns = []
+    all_selected_columns = []
 
     for selection in selections:
         if '-' in selection:
             start, end = map(int, selection.split('-'))
-            selected_columns.extend(df.columns[start:end + 1])
+            all_selected_columns.extend(df.columns[start:end + 1])
         else:
-            selected_columns.append(df.columns[int(selection)])
+            all_selected_columns.append(df.columns[int(selection)])
 
-    column_df = df[selected_columns]
-    if column_df.columns[0] != depth_column_name:
-        column_df.insert(0,depth_column_name, df.pop(depth_column_name))
-# /////////////////////////////////// end section  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # column_df = df[selected_columns]
+    if depth_column_name in all_selected_columns:
+        all_selected_columns.remove(depth_column_name)
+    all_selected_columns_df = pd.DataFrame(columns=all_selected_columns)
 
-# ////////////////////////////////// single row \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    one_row_inputs = input("what columns have only one row? (LPI,LSN...): ")
+    print('-------------------------------------------------------------------\n')
+    for column in all_selected_columns_df.columns:
+        print(all_selected_columns_df.columns.get_loc(column),column)
+    one_row_inputs = input("\nWhat columns have only one row? (example: 2-45,51,54): ")
 
     selections = one_row_inputs.split(',')
 
-    selected_columns = []
+    one_col_selected_columns = []
 
     for selection in selections:
         if '-' in selection:
             start, end = map(int, selection.split('-'))
-            selected_columns.extend(df.columns[start:end + 1])
+            one_col_selected_columns.extend(all_selected_columns_df.columns[start:end + 1])
         else:
-            selected_columns.append(df.columns[int(selection)])
-    single_value_columns_df = df[selected_columns] #TODO make sure this df is now only one row
-    new_df = pd.concat([column_df, single_value_columns_df], axis=1)
-# ///////////////////////////////  end section  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+            one_col_selected_columns.append(all_selected_columns_df.columns[int(selection)])
 
-    return new_df, column_df, single_value_columns_df
+    depth_step_selected_columns = all_selected_columns
+    for i in depth_step_selected_columns[:]:
+        if i in one_col_selected_columns:
+            depth_step_selected_columns.remove(i)
+
+    print('-------------------------------------------------------------------\n')
+    print("Here is the list of columns that will have values for each depth step interval:\n\t"+str(depth_step_selected_columns)+"\n")
+    print("Here is the list of columns that will only have one column (i.e. not a value for each depth step interval):\n\t"+str(one_col_selected_columns)+"\n")
+    acceptable_list = input("Is this correct? (True or False) *this is case sensitive*: ") # TODO: fix this input to exit or restart the while loop
+
+    return acceptable_list, depth_step_selected_columns, one_col_selected_columns
 
 
 def finding_max_depth (input_folder_path_calculated_files):
