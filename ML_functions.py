@@ -51,7 +51,11 @@ def user_input_columns (input_folder_path_calculated_files, depth_column_name, a
     print('-------------------------------------------------------------------\n')
     print("Here is the list of columns that will have values for each depth step interval:\n\t"+str(depth_step_selected_columns)+"\n")
     print("Here is the list of columns that will only have one column (i.e. not a value for each depth step interval):\n\t"+str(one_col_selected_columns)+"\n")
-    acceptable_list = input("Is this correct? (True or False) *this is case sensitive*: ") # TODO: fix this input to exit or restart the while loop
+    acceptable_list = input("Is this correct? (True or False) *this is case sensitive*: ")
+    if acceptable_list == "True":
+        acceptable_list = True
+    else:
+        acceptable_list = False
 
     return acceptable_list, depth_step_selected_columns, one_col_selected_columns
 
@@ -76,8 +80,14 @@ def finding_max_depth (input_folder_path_calculated_files):
 
     return max_depth, max_depth_site_name
 
-def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_step):
+def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_step, depth_step_selected_columns, one_col_selected_columns):
 
+    monster_df = pd.DataFrame
+
+
+
+    return monster_df
+#------------------------------------------------------------------------------------------------------------
     counter = 0
     monster_df = pd.DataFrame()
     monster_depth = depth_step
@@ -109,4 +119,3 @@ def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_st
     #     # monster_df.loc[counter] = {temp_col_vals}
     #     counter += 1
     #     monster_depth += depth_step
-    # return monster_df
