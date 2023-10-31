@@ -24,7 +24,7 @@ def user_input_columns (input_folder_path_calculated_files, depth_column_name, a
 
     # column_df = df[selected_columns]
     if depth_column_name in all_selected_columns:
-        all_selected_columns.remove(depth_column_name)
+        all_selected_columns.remove(depth_column_name) #TODO what do we want to do about the date column? Remove it, or save it somewhere else
     all_selected_columns_df = pd.DataFrame(columns=all_selected_columns)
 
     print('-------------------------------------------------------------------\n')
@@ -80,10 +80,56 @@ def finding_max_depth (input_folder_path_calculated_files):
 
     return max_depth, max_depth_site_name
 
+def interpolator_ML (value_above, value_below, depth_below, depth_above, depth):
+
+    if (value_above == np.isnan(value_above)) or (value_below == np.isnan(value_above)):
+        interpolated_val = np.nan
+    else:
+        interpolated_val = value_below + (value_above-value_below)/(depth_above - depth_below) * (depth - depth_below)
+
+    return interpolated_val
+
+
 def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_step, depth_step_selected_columns, one_col_selected_columns):
 
-    monster_df = pd.DataFrame
+    # print(max_depth/ depth_step)
+    list_of_depth_step_columns = []
 
+    for column in range(len(depth_step_selected_columns)):
+        column_name = depth_step_selected_columns[column]
+
+        for step in range(int(max_depth/depth_step)): # NOTE: the int() will truncate the depth
+            if step == 0:
+                step = depth_step
+            else:
+                step = depth_step * step + depth_step
+
+            list_of_depth_step_columns.append(str(column_name + ":" + str(round(step,2))))
+    monster_df = pd.DataFrame(columns=list_of_depth_step_columns)
+
+
+
+    site_counter = 0
+    site_names = []
+    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+        site = os.path.basename(filename).rstrip(".xls")
+        df = pd.read_excel(filename)
+        print(site)
+        site_names.append(site)
+        df.set_index(depth_column_name)
+
+        for col_monster_df in list_of_depth_step_columns:
+
+            for col_soil_parameters in df.columns:
+                column_name = col_monster_df.split(":")[0]
+                depth_val = col_monster_df.split(":")[1]
+                if col_soil_parameters == column_name:
+                    for depth, row in df.iterrows():
+                        soil_paramterer_depth_val = (depth * depth_step) + depth_step
+                        if soil_paramterer_depth_val == depth_val:
+                            monster_df.at[site_counter, col_monster_df] = df.at[depth, column_name]
+        site_counter += 1
+    monster_df.set_index(site_names)
 
 
     return monster_df
@@ -92,7 +138,7 @@ def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_st
     monster_df = pd.DataFrame()
     monster_depth = depth_step
 
-    df = pd.read_excel(glob.glob(os.path.join(input_folder_path, "*.xls*"))[0])
+    #df = pd.read_excel(glob.glob(os.path.join(input_folder_path, "*.xls*"))[0])
     # for column in df.columns:
         # print(column, df.columns.get_loc(column))
 
