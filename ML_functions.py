@@ -80,32 +80,91 @@ def finding_max_depth (input_folder_path_calculated_files):
 
     return max_depth, max_depth_site_name
 
-def interpolator_ML (value_above, value_below, depth_below, depth_above, depth):
+def interpolator_ML (value_above, value_below, depth_below, depth_above, target_depth):
 
     if (value_above == np.isnan(value_above)) or (value_below == np.isnan(value_above)):
         interpolated_val = np.nan
+    elif depth_below == depth_above:
+        return value_above
     else:
-        interpolated_val = value_below + (value_above-value_below)/(depth_above - depth_below) * (depth - depth_below)
+        interpolated_val = value_below + (value_above-value_below)/(depth_above - depth_below) * (target_depth - depth_below)
 
     return interpolated_val
 
+def closest(site_depth_column, target_depth):
+    nearest = site_depth_column[min(range(len(site_depth_column)), key=lambda i: abs(site_depth_column[i] - target_depth))]
+    index = site_depth_column[site_depth_column == nearest].index[0]
+    if nearest == target_depth:
+        return index, index
+    if nearest < target_depth:
+        before_index = index
+        after_index = index + 1
+    elif nearest > target_depth:
+        before_index = index - 1
+        after_index = index
+    before_value = site_depth_column[before_index]
+    after_value = site_depth_column[after_index]
+    if before_index == -1:
+        return "this is in a preforo" # TODO: how do we want to handle preforos
+    return before_index, after_index
 
-def create_monster_df (input_folder_path, depth_column_name, max_depth, depth_step, depth_step_selected_columns, one_col_selected_columns):
 
-    # print(max_depth/ depth_step)
-    list_of_depth_step_columns = []
+def create_monster_df (max_depth, depth_step, depth_step_selected_columns):
 
-    for column in range(len(depth_step_selected_columns)):
-        column_name = depth_step_selected_columns[column]
+    depth_step_columns = [
+        f"{column_name}:{round(step * depth_step, 2)}"
+        for column_name in depth_step_selected_columns
+        for step in range(1, int(max_depth / depth_step) + 1)
+    ]
 
-        for step in range(int(max_depth/depth_step)): # NOTE: the int() will truncate the depth
-            if step == 0:
-                step = depth_step
-            else:
-                step = depth_step * step + depth_step
+    target_depths = [
+        round(step * depth_step, 2)
+        for step in range(1, int(max_depth / depth_step) + 1)
+    ]
 
-            list_of_depth_step_columns.append(str(column_name + ":" + str(round(step,2))))
-    monster_df = pd.DataFrame(columns=list_of_depth_step_columns)
+    monster_df = pd.DataFrame(columns=depth_step_columns)
+
+    return monster_df, depth_step_columns, target_depths
+
+def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns, target_depths, depth_col_name):
+
+    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+        monster_row = []
+        site = os.path.basename(filename).rstrip(".xls")
+        monster_df = pd.concat([monster_df, pd.DataFrame(index=pd.Index([site]))])
+        df = pd.read_excel(filename)
+        # print(site)
+        for col in depth_step_selected_columns:
+            for target_depth in target_depths:
+                index_before, index_after = closest(df[depth_col_name], target_depth) # TODO: add nans before min depth of df and after max depth of df
+                value_before = df.loc[index_before][col]
+                value_after = df.loc[index_after][col]
+                monster_row.append(interpolator_ML(value_after, value_before, df.loc[index_before][depth_col_name], df.loc[index_after][depth_col_name], target_depth))
+
+        monster_df.loc[site] = monster_row
+
+    return monster_df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
