@@ -3,7 +3,7 @@ import numpy as np
 import glob, os
 
 
-def user_input_columns (input_folder_path_calculated_files, depth_column_name, acceptable_list):
+def user_input_columns (input_folder_path_calculated_files, depth_column_name, acceptable_list_confirmation):
 
     df = pd.read_excel(glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*"))[0])
     for column in df.columns:
@@ -51,13 +51,14 @@ def user_input_columns (input_folder_path_calculated_files, depth_column_name, a
     print('-------------------------------------------------------------------\n')
     print("Here is the list of columns that will have values for each depth step interval:\n\t"+str(depth_step_selected_columns)+"\n")
     print("Here is the list of columns that will only have one column (i.e. not a value for each depth step interval):\n\t"+str(one_col_selected_columns)+"\n")
-    acceptable_list = input("Is this correct? (True or False) *this is case sensitive*: ")
-    if acceptable_list == "True":
-        acceptable_list = True
-    else:
-        acceptable_list = False
+    acceptable_list_confirmation = input("Is this correct? (True or False) *this is case sensitive*: ")
+    if acceptable_list_confirmation == "True":
 
-    return acceptable_list, depth_step_selected_columns, one_col_selected_columns
+        acceptable_list_confirmation = True
+    else:
+        acceptable_list_confirmation = False
+
+    return acceptable_list_confirmation, depth_step_selected_columns, one_col_selected_columns
 
 
 def finding_max_depth (input_folder_path_calculated_files):
@@ -109,7 +110,7 @@ def closest(site_depth_column, target_depth):
     return before_index, after_index
 
 
-def create_monster_df (max_depth, depth_step, depth_step_selected_columns):
+def create_monster_df (max_depth, depth_step, depth_step_selected_columns, one_col_selected_columns):
 
     depth_step_columns = [
         f"{column_name}:{round(step * depth_step, 2)}"
@@ -117,12 +118,16 @@ def create_monster_df (max_depth, depth_step, depth_step_selected_columns):
         for step in range(1, int(max_depth / depth_step) + 1)
     ]
 
+    one_col_columns = [
+        f"{column_name}" for column_name in one_col_selected_columns
+    ]
+
     target_depths = [
         round(step * depth_step, 2)
         for step in range(1, int(max_depth / depth_step) + 1)
     ]
 
-    monster_df = pd.DataFrame(columns=depth_step_columns)
+    monster_df = pd.DataFrame(columns=(depth_step_columns + one_col_columns))
 
     return monster_df, depth_step_columns, target_depths
 
