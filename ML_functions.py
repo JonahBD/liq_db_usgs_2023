@@ -131,20 +131,85 @@ def create_monster_df (max_depth, depth_step, depth_step_selected_columns, one_c
 
     return monster_df, depth_step_columns, target_depths
 
-def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns, target_depths, depth_col_name):
+def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns, target_depths, depth_col_name, one_row_selected_col):
 
+    preforo_depth_counter = 0
     for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         monster_row = []
         site = os.path.basename(filename).rstrip(".xls")
         monster_df = pd.concat([monster_df, pd.DataFrame(index=pd.Index([site]))])
         df = pd.read_excel(filename)
-        # print(site)
+        print(site)
+
         for col in depth_step_selected_columns:
+            # print(col)
+            values = df[col].to_numpy()
+            depths = df[depth_col_name].to_numpy()
+
             for target_depth in target_depths:
-                index_before, index_after = closest(df[depth_col_name], target_depth) # TODO: add nans before min depth of df and after max depth of df
-                value_before = df.loc[index_before][col]
-                value_after = df.loc[index_after][col]
-                monster_row.append(interpolator_ML(value_after, value_before, df.loc[index_before][depth_col_name], df.loc[index_after][depth_col_name], target_depth))
+                # print(target_depth, depths[0])
+                # print(target_depth, depths[-1])
+
+                if target_depth > depths[-1]:
+                    # Handle cases where target_depth is outside the DataFrame's depth range
+                    monster_row.extend([np.nan] * (len(target_depths) - len(depths)-preforo_depth_counter))
+                    break
+                elif target_depth < depths[0]: #this if for a preforo
+                    monster_row.append([np.nan])
+                    preforo_depth_counter += 1
+                else:
+                    try:
+                        idx_before = np.searchsorted(depths, target_depth, side='right') - 1
+                        idx_after = idx_before + 1
+
+                        depth_before = depths[idx_before]
+                        depth_after = depths[idx_after]
+
+                        value_before = values[idx_before]
+                        value_after = values[idx_after]
+
+                        monster_row.append(
+                            interpolator_ML(value_after, value_before, depth_before, depth_after, target_depth))
+                    except IndexError:
+                        monster_row.append(value_after)
+
+        for col in one_row_selected_col:
+            vals = df.loc[0,col]
+            monster_row.append(vals)
+
+
+
+                # print(*monster_row, sep="\n")
+
+        # for col in depth_step_selected_columns:
+        #     print(col)
+        #     values = df[col].to_numpy()
+        #     depths = df[depth_col_name].to_numpy()
+        #
+        #     for target_depth in target_depths:
+        #         idx_before = np.searchsorted(depths, target_depth, side='right') - 1
+        #         idx_after = idx_before + 1
+        #
+        #         if idx_before < 0 or idx_after >= len(depths):
+        #             continue  # Handle cases where target_depth is outside the DataFrame's depth range
+        #
+        #         depth_before = depths[idx_before]
+        #         depth_after = depths[idx_after]
+        #
+        #         value_before = values[idx_before]
+        #         value_after = values[idx_after]
+        #
+        #         monster_row.append(interpolator_ML(value_after, value_before, depth_before, depth_after, target_depth))
+
+
+
+
+        # for col in depth_step_selected_columns:
+        #     for target_depth in target_depths:
+        #         index_before, index_after = closest(df[depth_col_name], target_depth) # TODO: add nans before min depth of df and after max depth of df
+        #         value_before = df.loc[index_before][col]
+        #         value_after = df.loc[index_after][col]
+        #         monster_row.append(interpolator_ML(value_after, value_before, df.loc[index_before][depth_col_name], df.loc[index_after][depth_col_name], target_depth))
 
         monster_df.loc[site] = monster_row
 
