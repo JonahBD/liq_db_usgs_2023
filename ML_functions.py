@@ -83,7 +83,7 @@ def finding_max_depth (input_folder_path_calculated_files):
 
 def interpolator_ML (value_above, value_below, depth_below, depth_above, target_depth):
 
-    if (value_above == np.isnan(value_above)) or (value_below == np.isnan(value_above)):
+    if (value_above == np.isnan(value_above)) or (value_below == np.isnan(value_above)) or (int(value_below) == -9999) or (int(value_above) == -9999):
         interpolated_val = np.nan
     elif depth_below == depth_above:
         return value_above
@@ -93,21 +93,22 @@ def interpolator_ML (value_above, value_below, depth_below, depth_above, target_
     return interpolated_val
 
 def closest(site_depth_column, target_depth):
-    nearest = site_depth_column[min(range(len(site_depth_column)), key=lambda i: abs(site_depth_column[i] - target_depth))]
-    index = site_depth_column[site_depth_column == nearest].index[0]
+    abs_diff = np.abs(site_depth_column - target_depth)
+    index = np.argmin(abs_diff)
+    nearest = site_depth_column[index]
+    # nearest = site_depth_column[min(range(len(site_depth_column)), key=lambda i: abs(site_depth_column[i] - target_depth))]
+    # index = site_depth_column[site_depth_column == nearest].index[0]
     if nearest == target_depth:
-        return index, index
+        return index, site_depth_column[index], index, site_depth_column[index]
     if nearest < target_depth:
         before_index = index
         after_index = index + 1
     elif nearest > target_depth:
         before_index = index - 1
         after_index = index
-    before_value = site_depth_column[before_index]
-    after_value = site_depth_column[after_index]
-    if before_index == -1:
-        return "this is in a preforo" # TODO: how do we want to handle preforos
-    return before_index, after_index
+    before_depth = site_depth_column[before_index]
+    after_depth = site_depth_column[after_index]
+    return before_index, before_depth, after_index, after_depth
 
 
 def create_monster_df (max_depth, depth_step, depth_step_selected_columns, one_col_selected_columns):
@@ -152,18 +153,21 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
 
                 if target_depth > depths[-1]:
                     # Handle cases where target_depth is outside the DataFrame's depth range
-                    monster_row.extend([np.nan] * (len(target_depths) - len(depths)-preforo_depth_counter))
-                    break
+                    monster_row.extend([np.nan])
+                    # monster_row.extend([np.nan] * (len(target_depths) - len(depths)-preforo_depth_counter))
+                    # break
                 elif target_depth < depths[0]: #this if for a preforo
                     monster_row.append([np.nan])
                     preforo_depth_counter += 1
                 else:
                     try:
-                        idx_before = np.searchsorted(depths, target_depth, side='right') - 1
-                        idx_after = idx_before + 1
+                        idx_before, depth_before, idx_after, depth_after = closest(depths, target_depth)
 
-                        depth_before = depths[idx_before]
-                        depth_after = depths[idx_after]
+                        # idx_before = np.searchsorted(depths, target_depth, side='right') - 1
+                        # idx_after = idx_before + 1
+                        #
+                        # depth_before = depths[idx_before]
+                        # depth_after = depths[idx_after]
 
                         value_before = values[idx_before]
                         value_after = values[idx_after]

@@ -5,8 +5,8 @@ import glob, os
 from datetime import datetime
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\calculated files\testing files"
-export_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\ran tests"
+input_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing"
+export_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing_monster"
 depth_column_name = "Depth (m)"
 depth_step = 0.01 # in meters
 #########################################################
@@ -26,6 +26,6 @@ max_depth = 50.01
 
 df, depth_step_columns, target_depths = create_monster_df(max_depth, depth_step, depth_step_selected_columns, one_row_selected_columns)
 df = fill_monster_df(input_folder_path, df, depth_step_selected_columns, target_depths, depth_column_name, one_row_selected_columns)
-print("hello")
+df.to_csv(export_folder_path+"\monster.csv")
 
 
