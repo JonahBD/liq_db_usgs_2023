@@ -5,8 +5,8 @@ import glob, os
 from datetime import datetime
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing"
-export_folder_path = r"C:\Users\jdundas2\Documents\Step 5 downloads\testing_monster"
+input_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\ran tests"
+export_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard"
 depth_column_name = "Depth (m)"
 depth_step = 0.01 # in meters
 #########################################################
@@ -21,7 +21,7 @@ depth_step_selected_columns = ['qc (MPa)'] #, 'fs (kPa)', 'u (kPa)', 'qt (MPa)',
 one_row_selected_columns = ['h1_basic_20may', 'h2_basic_20may', 'h1_basic_29may', 'h2_basic_29may', 'h1_cumulative_20may', 'h2_cumulative_20may', 'h1_cumulative_29may', 'h2_cumulative_29may', 'LPI_20may', 'LPI_29may', 'LPIish_20may', 'LPIish_29may', 'LSN_20may', 'LSN_29may', 'Unnamed: 5', 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_20may', 'PGA_29may', 'Liquefaction']
 # max_depth, max_depth_site = finding_max_depth(input_folder_path)
 # print(max_depth, max_depth_site)
-max_depth = 50.01
+max_depth = 50.4
 
 
 df, depth_step_columns, target_depths = create_monster_df(max_depth, depth_step, depth_step_selected_columns, one_row_selected_columns)

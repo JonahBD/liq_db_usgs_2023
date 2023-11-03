@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import glob, os
 from datetime import datetime
+from tqdm import tqdm
 
 missing_pga = []
 preforo_below_GWT = []
@@ -11,7 +12,7 @@ nan_preforo = []
 ################ USER INPUTS ############################
 american_date = True # True or False
 input_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive"
-export_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\test files"
+export_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\ran tests"
 vals_pga_and_liq = r"C:\Users\hf233\Documents\Italy\pga.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
@@ -22,10 +23,9 @@ date2 = "29may"
 FS1 = "FS_" + date1
 FS2 = "FS_" + date2
 
-for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-
+for filename in tqdm(glob.glob(os.path.join(input_folder_path, "*.xls*"))):
     site = os.path.basename(filename).rstrip(".xls")
-    print(site)
+    # print(site)
 
     df = pd.read_excel(filename)
 
@@ -42,7 +42,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     try:
         df = PGA_insertion(df,vals_pga_and_liq, site)
     except KeyError:
-        print("This site is missing its PGA: " + site)
+        # print("This site is missing its PGA: " + site)
         missing_pga.append(site)
         continue
 

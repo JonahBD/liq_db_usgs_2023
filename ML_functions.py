@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import glob, os
+from tqdm import tqdm
 
 
 def user_input_columns (input_folder_path_calculated_files, depth_column_name, acceptable_list_confirmation):
@@ -66,7 +67,7 @@ def finding_max_depth (input_folder_path_calculated_files):
     max_depth_list = []
     site_list = []
 
-    for filename in glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*")):
+    for filename in tqdm(glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*"))):
 
         site = os.path.basename(filename).rstrip(".xls")
         df = pd.read_excel(filename)
@@ -135,12 +136,13 @@ def create_monster_df (max_depth, depth_step, depth_step_selected_columns, one_c
 def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns, target_depths, depth_col_name, one_row_selected_col):
 
     preforo_depth_counter = 0
-    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+    for filename in tqdm(glob.glob(os.path.join(input_folder_path, "*.xls*"))):
         monster_row = []
+        #TODO: add loading bar
         site = os.path.basename(filename).rstrip(".xls")
         monster_df = pd.concat([monster_df, pd.DataFrame(index=pd.Index([site]))])
         df = pd.read_excel(filename)
-        print(site)
+        # print(site)
 
         for col in depth_step_selected_columns:
             # print(col)
@@ -153,12 +155,9 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
 
                 if target_depth > depths[-1]:
                     # Handle cases where target_depth is outside the DataFrame's depth range
-                    monster_row.extend([np.nan])
-                    # monster_row.extend([np.nan] * (len(target_depths) - len(depths)-preforo_depth_counter))
-                    # break
+                    monster_row.append(np.nan)
                 elif target_depth < depths[0]: #this if for a preforo
-                    monster_row.append([np.nan])
-                    preforo_depth_counter += 1
+                    monster_row.append(np.nan)
                 else:
                     try:
                         idx_before, depth_before, idx_after, depth_after = closest(depths, target_depth)
