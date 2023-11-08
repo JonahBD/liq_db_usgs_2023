@@ -23,9 +23,18 @@ date2 = "29may"
 FS1 = "FS_" + date1
 FS2 = "FS_" + date2
 
-for filename in tqdm(glob.glob(os.path.join(input_folder_path, "*.xls*"))):
+sites = []
+
+for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+    site = os.path.basename(filename).rstrip(".xls")
+    sites.append(site)
+
+loop = tqdm(total=(len(sites)))
+
+for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     site = os.path.basename(filename).rstrip(".xls")
     # print(site)
+    loop.set_description(f"soil parameters - {site} :")
 
     df = pd.read_excel(filename)
 
@@ -81,6 +90,7 @@ for filename in tqdm(glob.glob(os.path.join(input_folder_path, "*.xls*"))):
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_'+date1, 'PGA_'+date2,'Liquefaction']] #TODO: should we move date to the end so that it's easy to take out for the ML model code?
 
     df.to_excel(export_folder_path_df, index=False)
+    loop.update(1)
 
 pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})

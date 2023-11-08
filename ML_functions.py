@@ -62,7 +62,7 @@ def user_input_columns (input_folder_path_calculated_files, depth_column_name, a
     return acceptable_list_confirmation, depth_step_selected_columns, one_col_selected_columns
 
 
-def finding_max_depth (input_folder_path_calculated_files):
+def finding_max_depth (input_folder_path_calculated_files, depth_col_name):
 
     max_depth_list = []
     site_list = []
@@ -72,7 +72,7 @@ def finding_max_depth (input_folder_path_calculated_files):
         site = os.path.basename(filename).rstrip(".xls")
         df = pd.read_excel(filename)
 
-        max_depth_list.append(df["Depth (m)"].max())
+        max_depth_list.append(df[depth_col_name].max())
 
         site_list.append(site)
 
@@ -84,7 +84,13 @@ def finding_max_depth (input_folder_path_calculated_files):
 
 def interpolator_ML (value_above, value_below, depth_below, depth_above, target_depth):
 
-    if (value_above == np.isnan(value_above)) or (value_below == np.isnan(value_above)) or (int(value_below) == -9999) or (int(value_above) == -9999):
+    if value_below == "No Solution" or value_above == "No Solution":
+        interpolated_val = np.nan
+    elif value_above == "" or value_below == "": # TODO: should we change empty strings to nans in the soil parameter functions
+        interpolated_val = np.nan
+    elif (np.isnan(float(value_above))) or (np.isnan(float(value_below))): # TODO: the last error thrown was OverflowError: cannot convert float infinity to integer 036010P218CPTU218
+        interpolated_val = np.nan
+    elif (abs((value_below)) == 9999) or (abs(int(value_above)) == 9999):
         interpolated_val = np.nan
     elif depth_below == depth_above:
         return value_above
@@ -135,23 +141,29 @@ def create_monster_df (max_depth, depth_step, depth_step_selected_columns, one_c
 
 def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns, target_depths, depth_col_name, one_row_selected_col):
 
-    preforo_depth_counter = 0
-    for filename in tqdm(glob.glob(os.path.join(input_folder_path, "*.xls*"))):
+    sites = []
+
+    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
+        site = os.path.basename(filename).rstrip(".xls")
+        sites.append(site)
+
+    loop = tqdm(total=len(sites), colour="#c6e2ff")
+
+    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         monster_row = []
         #TODO: add loading bar
         site = os.path.basename(filename).rstrip(".xls")
+        loop.set_description(f"{site} :")
+
         monster_df = pd.concat([monster_df, pd.DataFrame(index=pd.Index([site]))])
         df = pd.read_excel(filename)
         # print(site)
 
         for col in depth_step_selected_columns:
-            # print(col)
             values = df[col].to_numpy()
             depths = df[depth_col_name].to_numpy()
 
             for target_depth in target_depths:
-                # print(target_depth, depths[0])
-                # print(target_depth, depths[-1])
 
                 if target_depth > depths[-1]:
                     # Handle cases where target_depth is outside the DataFrame's depth range
@@ -161,12 +173,6 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
                 else:
                     try:
                         idx_before, depth_before, idx_after, depth_after = closest(depths, target_depth)
-
-                        # idx_before = np.searchsorted(depths, target_depth, side='right') - 1
-                        # idx_after = idx_before + 1
-                        #
-                        # depth_before = depths[idx_before]
-                        # depth_after = depths[idx_after]
 
                         value_before = values[idx_before]
                         value_after = values[idx_after]
@@ -180,120 +186,7 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
             vals = df.loc[0,col]
             monster_row.append(vals)
 
-
-
-                # print(*monster_row, sep="\n")
-
-        # for col in depth_step_selected_columns:
-        #     print(col)
-        #     values = df[col].to_numpy()
-        #     depths = df[depth_col_name].to_numpy()
-        #
-        #     for target_depth in target_depths:
-        #         idx_before = np.searchsorted(depths, target_depth, side='right') - 1
-        #         idx_after = idx_before + 1
-        #
-        #         if idx_before < 0 or idx_after >= len(depths):
-        #             continue  # Handle cases where target_depth is outside the DataFrame's depth range
-        #
-        #         depth_before = depths[idx_before]
-        #         depth_after = depths[idx_after]
-        #
-        #         value_before = values[idx_before]
-        #         value_after = values[idx_after]
-        #
-        #         monster_row.append(interpolator_ML(value_after, value_before, depth_before, depth_after, target_depth))
-
-
-
-
-        # for col in depth_step_selected_columns:
-        #     for target_depth in target_depths:
-        #         index_before, index_after = closest(df[depth_col_name], target_depth) # TODO: add nans before min depth of df and after max depth of df
-        #         value_before = df.loc[index_before][col]
-        #         value_after = df.loc[index_after][col]
-        #         monster_row.append(interpolator_ML(value_after, value_before, df.loc[index_before][depth_col_name], df.loc[index_after][depth_col_name], target_depth))
-
         monster_df.loc[site] = monster_row
+        loop.update(1)
 
     return monster_df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    site_counter = 0
-    site_names = []
-    for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-        site = os.path.basename(filename).rstrip(".xls")
-        df = pd.read_excel(filename)
-        print(site)
-        site_names.append(site)
-        df.set_index(depth_column_name)
-
-        for col_monster_df in list_of_depth_step_columns:
-
-            for col_soil_parameters in df.columns:
-                column_name = col_monster_df.split(":")[0]
-                depth_val = col_monster_df.split(":")[1]
-                if col_soil_parameters == column_name:
-                    for depth, row in df.iterrows():
-                        soil_paramterer_depth_val = (depth * depth_step) + depth_step
-                        if soil_paramterer_depth_val == depth_val:
-                            monster_df.at[site_counter, col_monster_df] = df.at[depth, column_name]
-        site_counter += 1
-    monster_df.set_index(site_names)
-
-
-    return monster_df
-#------------------------------------------------------------------------------------------------------------
-    counter = 0
-    monster_df = pd.DataFrame()
-    monster_depth = depth_step
-
-    #df = pd.read_excel(glob.glob(os.path.join(input_folder_path, "*.xls*"))[0])
-    # for column in df.columns:
-        # print(column, df.columns.get_loc(column))
-
-    # for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    #     site = os.path.basename(filename).rstrip(".xls")
-    #     df = pd.read_excel(filename)
-    #     print(site)
-    #
-    #     temp_col_names = []
-    #     temp_col_vals = []
-    #
-    #     for index, row in df.iterrows():
-    #         depth = row[depth_column_name]
-    #         for column in df.columns:
-    #             if column ==  depth_column_name:
-    #                 continue
-    #             else:
-    #                 # monster_df.at[counter , column + "_d_" + str(depth)] = row[column]
-    #                 temp_col_names.append(column + "_d_" + str(monster_depth))
-    #                 temp_col_vals.append(row[column])
-    #     # df_col_names = pd.DataFrame(temp_col_names)
-    #     # df_col_val = pd.DataFrame(temp_col_vals)
-    #     monster_df = pd.DataFrame({"header": temp_col_names, "vals": temp_col_vals}).T
-    #     # monster_df.loc[counter] = {temp_col_vals}
-    #     counter += 1
-    #     monster_depth += depth_step
