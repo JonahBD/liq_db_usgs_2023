@@ -67,7 +67,7 @@ def finding_max_depth (input_folder_path_calculated_files, depth_col_name):
     max_depth_list = []
     site_list = []
 
-    for filename in tqdm(glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*"))):
+    for filename in glob.glob(os.path.join(input_folder_path_calculated_files, "*.xls*")):
 
         site = os.path.basename(filename).rstrip(".xls")
         df = pd.read_excel(filename)
@@ -84,20 +84,40 @@ def finding_max_depth (input_folder_path_calculated_files, depth_col_name):
 
 def interpolator_ML (value_above, value_below, depth_below, depth_above, target_depth):
 
+    if value_below == 'inf':
+        value_below = float('inf')
+    if value_above == 'inf':
+        value_above = float('inf')
+
     if value_below == "No Solution" or value_above == "No Solution":
         interpolated_val = np.nan
     elif value_above == "" or value_below == "": # TODO: should we change empty strings to nans in the soil parameter functions
         interpolated_val = np.nan
-    elif (np.isnan(float(value_above))) or (np.isnan(float(value_below))): # TODO: the last error thrown was OverflowError: cannot convert float infinity to integer 036010P218CPTU218
-        interpolated_val = np.nan
-    elif (abs((value_below)) == 9999) or (abs(int(value_above)) == 9999):
+    elif abs(value_above) == float('inf') and abs(value_below) == float('inf'):
+        interpolated_val = float('inf')
+    elif abs(value_above) == float('inf') or abs(value_below) == float('inf'):
+        if value_above == float('inf') and not value_below == float('inf'):
+            interpolated_val = value_below + (9999-value_below)/(depth_above - depth_below) * (target_depth - depth_below)
+        elif value_below == float('inf') and not value_above == float('inf'):
+            interpolated_val = 9999 + (value_above - 9999) / (depth_above - depth_below) * (
+                        target_depth - depth_below)
+        elif not np.isnan(float(value_above)) and np.isnan(float(value_below)):
+            interpolated_val = value_above
+    elif (np.isnan(float(value_above))) or (np.isnan(float(value_below))): # NOTE: the last error thrown was OverflowError: cannot convert float infinity to integer 036010P218CPTU218
+        if np.isnan(float(value_above)) and not np.isnan(float(value_below)):
+            interpolated_val = value_below
+        elif not np.isnan(float(value_above)) and np.isnan(float(value_below)):
+            interpolated_val = value_above
+        else:
+            interpolated_val = np.nan
+    elif (abs(int(value_below)) == 9999) or (abs(int(value_above)) == 9999):
         interpolated_val = np.nan
     elif depth_below == depth_above:
         return value_above
     else:
         interpolated_val = value_below + (value_above-value_below)/(depth_above - depth_below) * (target_depth - depth_below)
 
-    return interpolated_val
+    return round(interpolated_val, 3)
 
 def closest(site_depth_column, target_depth):
     abs_diff = np.abs(site_depth_column - target_depth)
@@ -147,13 +167,12 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
         site = os.path.basename(filename).rstrip(".xls")
         sites.append(site)
 
-    loop = tqdm(total=len(sites), colour="#c6e2ff")
+    loop2 = tqdm(total=len(sites), colour="#c6e2ff")
 
     for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         monster_row = []
-        #TODO: add loading bar
         site = os.path.basename(filename).rstrip(".xls")
-        loop.set_description(f"{site} :")
+        loop2.set_description(f"monster - {site} :")
 
         monster_df = pd.concat([monster_df, pd.DataFrame(index=pd.Index([site]))])
         df = pd.read_excel(filename)
@@ -187,6 +206,6 @@ def fill_monster_df (input_folder_path, monster_df, depth_step_selected_columns,
             monster_row.append(vals)
 
         monster_df.loc[site] = monster_row
-        loop.update(1)
-
+        loop2.update(1)
+    loop2.close()
     return monster_df

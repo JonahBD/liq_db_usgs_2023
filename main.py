@@ -11,9 +11,9 @@ nan_preforo = []
 
 ################ USER INPUTS ############################
 american_date = True # True or False
-input_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive"
-export_folder_path = r"C:\Users\hf233\Documents\Italy\5. CPTU standard\Files from drive\ran tests"
-vals_pga_and_liq = r"C:\Users\hf233\Documents\Italy\pga.xlsx"
+input_folder_path = r"C:\Users\jdundas2\Documents\Validating Graphs\og files"
+export_folder_path = r"C:\Users\jdundas2\Documents\Validating Graphs\soil parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 date1 = "20may"
@@ -53,6 +53,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     except KeyError:
         # print("This site is missing its PGA: " + site)
         missing_pga.append(site)
+        loop.update(1)
         continue
 
     preforo_checker = preforo_check(df, "GWT [m]", "preforo [m]")
@@ -71,6 +72,11 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     df = LPI(df, depth_column_name, FS1, date1)
     df = LPI(df, depth_column_name, FS2, date2)
 
+    df.at[0, f'towhata_basic_{date1}'] = Towhata_2016(df, "LPI_"+date1, "h1_basic_"+date1)
+    df.at[0, f'towhata_cumulative_{date1}'] = Towhata_2016(df, "LPI_" + date1, "h1_cumulative_" + date1)
+    df.at[0, f'towhata_basic_{date2}'] = Towhata_2016(df, "LPI_" + date2, "h1_basic_" + date2)
+    df.at[0, f'towhata_cumulative_{date2}'] = Towhata_2016(df, "LPI_" + date2, "h1_cumulative_" + date2)
+
     df = LPIish(df, depth_column_name, FS1, date1, "h1_basic_"+date1)
     df = LPIish(df, depth_column_name, FS1, date1, "h1_cumulative_"+date1)
     df = LPIish(df, depth_column_name, FS2, date2, "h1_basic_"+date2)
@@ -85,13 +91,14 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs",'Kσ', 'rd_20may', 'rd_29may', "CSR_"+date1,
              "CRR_"+date1, 'CSR_'+date2, 'CRR_'+date2, "FS_"+date1, "FS_"+date2,'h1_basic_'+date1,'h2_basic_'+date1,'h1_basic_'+date2,'h2_basic_'+date2,
-             'h1_cumulative_'+date1,'h2_cumulative_'+date1,'h1_cumulative_'+date2,'h2_cumulative_'+date2, "LPI_"+date1,"LPI_"+date2,"LPIish_"+date1,"LPIish_"+date2,
-             'LSN_'+date1, 'LSN_'+date2,
+             'h1_cumulative_'+date1,'h2_cumulative_'+date1,'h1_cumulative_'+date2,'h2_cumulative_'+date2, "LPI_"+date1,"LPI_"+date2,
+             f'towhata_basic_{date1}', f'towhata_cumulative_{date1}', f'towhata_basic_{date2}', f'towhata_cumulative_{date2}',
+             "LPIish_"+date1,"LPIish_"+date2, 'LSN_'+date1, 'LSN_'+date2,
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_'+date1, 'PGA_'+date2,'Liquefaction']] #TODO: should we move date to the end so that it's easy to take out for the ML model code?
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)
-
+loop.close()
 pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
 nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})

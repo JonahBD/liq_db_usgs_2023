@@ -131,6 +131,19 @@ def soil_parameters(df):
         counter = counter1
     # /////////////////////////////////////////// end Ic CALCULATION \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+    # df['Cn'] = (Pa / df['Effective Stress (kPa)'])**0.5 # NOTE: this is the simpler form of finding qc1n found on page 89 of the Idriss and Boulanger book
+    # df['Cn'] = [1.7 if x >= 1.7 else x for x in df['Cn']]
+    # df['qc1n'] = df['Cn'] * df['qc calc'] / Pa
+    # df['Dr I'] = 0.478 * df['qc1n']**0.264 - 1.063
+
+    # df['FC'] = 2 * 2.8 * df["Ic"] ** 2.6  # Taken from Emilia Romagna paper
+    # Ic = df['Ic']
+    # df['Kc'] = 5.581 * Ic**3 - 0.403 * Ic**4 - 21.63 * Ic**2 + 33.75 * Ic - 17.88
+    # df['Kc'] = [1 if x <= 1.64 else y for x, y in zip(df['Ic'], df['Kc'])]
+    # df["Kc"] = [1 if ((1.64 < x < 2.36) and z < 0.5) else y for x, y, z in zip(df['Ic'],df['Kc'], df['Fr (%)'])]
+    # df["Kc"] = [float('nan') if x > 2.6 else y for x, y in zip(df['Ic'], df['Kc'])]
+    # df['qc1ncs_cameron'] = df['Kc'] * df['Qtn']
+
     # //////////////////////////////// Dr CALCULATION Idriss and Boulanger 2008 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     df['qc1'] = df['qc calc']  # Set recorded qc values as initial qc1n guess
@@ -141,13 +154,14 @@ def soil_parameters(df):
 
     while not counter:
         # Cn calculation
-        df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** (1.338 - .249 * df['qc1'] ** .264)
+        df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** (1.338 - .249 * (df['qc1'] / Pa) ** .264)
+        df['Cn2'] = [1.7 if x >= 1.7 else x for x in df['Cn2']]
 
         # New qcn1 calculation
-        df['qc2'] = df['Cn2'] * df['qc calc'] / Pa
+        df['qc2'] = df['Cn2'] * df['qc calc']
 
         # Dr calculation
-        df['Dr I'] = .478 * df['qc1'] ** .264 - 1.063
+        df['Dr I'] = .478 * ((df['qc1'] / Pa) ** .264) - 1.063
 
         # Find error between guess and new qcn1 calculation
         df['error2'] = np.abs(df['qc1'] - df['qc2'])
@@ -401,7 +415,6 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss 
         row = df.loc[i]
 
         if 2.6 > row["Ic"] > 0:
-
             c_sigma = 1 / (37.3 - 8.27 * row['qc1n'] ** .264)
             if c_sigma > .3:
                 c_sigma = .3
@@ -438,7 +451,7 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss 
                 FC = 0
             qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
             df.at[i, "qc1ncs"] = qc1ncs
-            # print(MSF1,row["Kσ"],i)
+
             df.at[i, "CRR_"+date1] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF1 / row["Kσ"]
 
@@ -711,6 +724,24 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
     # print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
 
     return df
+def Towhata_2016 (df,LPI_column_name,H1_column_name):
+    lpi_val = df.iloc[0][LPI_column_name]
+    h1_val = df.iloc[0][H1_column_name]
+
+    if h1_val > 5:
+        qualification = "A"
+    elif 3 < h1_val <= 5:
+        if lpi_val < 5:
+            qualification = "B1"
+        else:
+            qualification = "B2"
+    elif h1_val <= 3:
+        if lpi_val < 5:
+            qualification = "B3"
+        else:
+            qualification = "C"
+
+    return qualification
 
 def preforo_check(df, GWT_column_name, preforo_column_name):
     GWT_val = df.loc[0][GWT_column_name]

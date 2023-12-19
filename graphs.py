@@ -146,23 +146,22 @@ def makePlots(depth_column, dependent_variables_list, counter=1):
         plt.close(figure1)
 
 
-folder_path = r"C:\Users\jdundas2\Documents\paper tests"
+folder_path = r"C:\Users\jdundas2\Documents\Code Checks\Sara's paper comparisons\testing output"
 for filename in glob.glob(os.path.join(folder_path, "*.xls*")):
     print(filename)
     df = pd.read_excel(filename)
-    df = soil_parameters(df)
-    # filename = filename.replace("cliquest homo", "cliquest homo graphed")
-    filename = filename.removesuffix(".xls")
-    filename = filename.removesuffix(".xlsx")
+    # df = soil_parameters(df)
+    filename = filename.replace("soil parameters", "graphs")
+    filename = filename.rstrip('.xls')
     plot_name = os.path.basename(filename)
     os.mkdir(filename)
 
     # Input the number of figures and graphs per figure to create
-    num_of_figures = 6
+    num_of_figures = 11
     graphs_per_figure = 5
 
     # Use this line to select a range of columns
-    variables = df.columns.values.tolist()[1:30]
+    variables = df.columns.values.tolist()[1:55]
 
     # Use these two lines to select individual columns by index number
     # df_custom = df.iloc[:, [3, 5, 1, 7]]
