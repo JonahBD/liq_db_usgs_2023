@@ -3,12 +3,13 @@ import numpy as np
 import warnings
 import scipy.integrate as integrate
 
+
 def soil_parameters(df):
     Pa = 101.325  # Atmospheric pressure in kPa
 
     # /////////////////////////////////////////////// COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     # Add new columns for each of the soil parameters
-    new_columns = ['u calc','qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
+    new_columns = ['u calc', 'qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
                    "Effective Stress (kPa)",
                    "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq", "cu_14", "M", "k0_1",
                    'k0_2', "Vs R",
@@ -377,20 +378,21 @@ def soil_parameters(df):
             axis=1, inplace=True)
     return df
 
-def PGA_insertion(df,PGA_filepath, site):
 
+def PGA_insertion(df, PGA_filepath, site):
     pga = pd.read_excel(PGA_filepath)
-    pga.set_index('site',inplace=True)
-    df.at[0,'PGA_20may'] = pga.loc[site]['PGA_20may']
-    df.at[0,'PGA_29may'] = pga.loc[site]['PGA_29may']
-    df.at[0,'Liquefaction'] = pga.loc[site]['Liquefaction']
+    pga.set_index('site', inplace=True)
+    df.at[0, 'PGA_20may'] = pga.loc[site]['PGA_20may']
+    df.at[0, 'PGA_29may'] = pga.loc[site]['PGA_29may']
+    df.at[0, 'Liquefaction'] = pga.loc[site]['Liquefaction']
     return df
 
+
 # input df must have PGA and Liquefaction values already defined
-def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss and Boulanger 2008
+def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss and Boulanger 2008
     Pa = 101.325
-    new_columns = ['qc1n','qc1ncs', 'Kσ', 'rd_'+date1, 'rd_'+date2, "CSR_"+date1, "CRR_"+date1, 'CSR_'+date2,
-                   'CRR_'+date2, "FS_"+date1, "FS_"+date2]
+    new_columns = ['qc1n', 'qc1ncs', 'Kσ', 'rd_' + date1, 'rd_' + date2, "CSR_" + date1, "CRR_" + date1, 'CSR_' + date2,
+                   'CRR_' + date2, "FS_" + date1, "FS_" + date2]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
@@ -411,7 +413,8 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss 
         if row['Dr I'] == 'No Solution':
             df.at[i, 'qc1n'] = float('NaN')
         else:
-            df.at[i, 'qc1n'] = ((row['Dr I'] + 1.063) / .478) ** (1 / .264)  # from Dr I iterative calc (we backcalculate here)
+            df.at[i, 'qc1n'] = ((row['Dr I'] + 1.063) / .478) ** (
+                        1 / .264)  # from Dr I iterative calc (we backcalculate here)
         row = df.loc[i]
 
         if 2.6 > row["Ic"] > 0:
@@ -429,91 +432,96 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2): # FS equation from Idriss 
                 row['Depth (m)'] / 11.73 + 5.133)  # rd is only good for depths less than 20 meters (pg 68)
             beta = .106 + .118 * np.sin(row['Depth (m)'] / 11.28 + 5.142)
             if row['Depth (m)'] < 20:
-                df.at[i, 'rd_'+date1] = np.exp(alpha + beta * Magnitude1)
-                df.at[i, 'rd_'+date2] = np.exp(alpha + beta * Magnitude2)
+                df.at[i, 'rd_' + date1] = np.exp(alpha + beta * Magnitude1)
+                df.at[i, 'rd_' + date2] = np.exp(alpha + beta * Magnitude2)
 
             row = df.loc[i]
 
             # Calcuating CSR
             g = 1
-            df.at[i, "CSR_"+date1] = .65 * df.loc[0, "PGA_"+date1] / g * row["Total Stress (kPa)"] / row[
-                "Effective Stress (kPa)"] * row["rd_"+date1] / MSF1 / row['Kσ']
-            df.at[i, "CSR_"+date2] = .65 * df.loc[0, "PGA_"+date2] / g * row["Total Stress (kPa)"] / row[
-                "Effective Stress (kPa)"] * row["rd_"+date2] / MSF2 / row['Kσ']
+            df.at[i, "CSR_" + date1] = .65 * df.loc[0, "PGA_" + date1] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_" + date1] / MSF1 / row['Kσ']
+            df.at[i, "CSR_" + date2] = .65 * df.loc[0, "PGA_" + date2] / g * row["Total Stress (kPa)"] / row[
+                "Effective Stress (kPa)"] * row["rd_" + date2] / MSF2 / row['Kσ']
 
             row = df.loc[i]
 
             # Calcuatig CRR
-            FC = 2 * 2.8 * row["Ic"]**2.6 #Taken from Emilia Romagna paper
+            FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper
             if FC > 100:
                 FC = 100
             elif FC < 0:
                 FC = 0
-            qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
+            qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(
+                1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
             df.at[i, "qc1ncs"] = qc1ncs
 
-            df.at[i, "CRR_"+date1] = np.exp(
+            df.at[i, "CRR_" + date1] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF1 / row["Kσ"]
 
-            df.at[i, "CRR_"+date2] = np.exp(
+            df.at[i, "CRR_" + date2] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF2 / row[
-                                        "Kσ"]
+                                           "Kσ"]
 
             row = df.loc[i]
 
             # FS liq
             if row["Depth (m)"] <= df.loc[0]['GWT [m]']:
-                df.at[i, "FS_"+date1] = 9999
-                df.at[i, "FS_"+date2] = 9999
+                df.at[i, "FS_" + date1] = 9999
+                df.at[i, "FS_" + date2] = 9999
             else:
-                df.at[i, "FS_"+date1] = row['CRR_'+date1] / row['CSR_'+date1]
-                df.at[i, "FS_"+date2] = row['CRR_'+date2] / row['CSR_'+date2]
+                df.at[i, "FS_" + date1] = row['CRR_' + date1] / row['CSR_' + date1]
+                df.at[i, "FS_" + date2] = row['CRR_' + date2] / row['CSR_' + date2]
 
     return df
 
 
 # calculates h2 as the thickness of the shallowest liquefiable layer greater than 0.3 meters
-def h1_h2_basic (df, depth_column_name, FS_column_name):
-  # Initialize variables
-  last_liq_depth = None
-  start_liq_depth = None
-  h2_thickness = 0
-  h1_thickness = df.iloc[-1][depth_column_name]
+# **h2 includes any non-liquefiable soil with thickness less than 0.3 meters**
+def h1_h2_basic(df, depth_column_name, FS_column_name):
+    # Initialize variables
+    last_liq_depth = None
+    start_liq_depth = None
+    h2_thickness = 0
+    h1_thickness = df.iloc[-1][depth_column_name]
 
+    # Iterate through the DataFrame
+    for index, row in df.iterrows():
+        depth = row[depth_column_name]
+        FS = row[FS_column_name]
+        if FS == '':
+            FS = float('NaN')
 
-  # Iterate through the DataFrame
-  for index, row in df.iterrows():
-      depth = row[depth_column_name]
-      FS = row[FS_column_name]
-      if FS == '':
-          FS = float('NaN')
+        if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
+            last_liq_depth = depth
+            if start_liq_depth is None:
+                start_liq_depth = df.loc[index - 1][depth_column_name]
+                if index == 0:
+                    h1_index = 0
+                else:
+                    h1_index = index - 1
+        else:
+            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
+                last_liq_depth = None
+                start_liq_depth = None
+            elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
+                h2_thickness = last_liq_depth - start_liq_depth
+                h1_thickness = df.loc[h1_index][depth_column_name]
+                break
 
-      if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
-          last_liq_depth = depth
-          if start_liq_depth is None:
-            start_liq_depth = depth
-            if index == 0:
-              h1_index = 0
-            else:
-              h1_index = index - 1
-      else:
-          if last_liq_depth is not None and depth - last_liq_depth > 0.3:
-            h2_thickness = last_liq_depth - start_liq_depth
-            h1_thickness = df.loc[h1_index][depth_column_name]
-            break
+    h1_column_name = "h1_basic" + FS_column_name.lstrip("FS")
+    h2_columnn_name = "h2_basic" + FS_column_name.lstrip("FS")
+    df.at[0, h1_column_name] = h1_thickness
+    df.at[0, h2_columnn_name] = h2_thickness
 
-  h1_column_name = "h1_basic" + FS_column_name.lstrip("FS")
-  h2_columnn_name = "h2_basic" + FS_column_name.lstrip("FS")
-  df.at[0,h1_column_name] = h1_thickness
-  df.at[0,h2_columnn_name] = h2_thickness
+    return df
 
-  return df
 
 # calculates h2 as the summation of all liquefiable layers for depths less than 10 meters
 def h1_h2_cumulative(df, depth_column_name, FS_column_name):
     # Initialize variables
-    current_depth = None
-    start_depth = None
+    last_liq_depth = None
+    start_liq_depth = None
     h2_thickness = 0
     h1_thickness = 10
 
@@ -524,25 +532,23 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
         if FS == '':
             FS = float('NaN')
 
-        if FS < 1 and (current_depth is None or depth - current_depth <= 0.3):  # replace current_depth with start_depth
-            # FS value found and consistent with the previous depth
-            current_depth = depth
-            if start_depth is None:
-                start_depth = depth
+        if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
+            last_liq_depth = depth
+            if start_liq_depth is None:
+                start_liq_depth = df.loc[index - 1][depth_column_name]
                 if index == 0:
                     h1_index = 0
                 else:
                     h1_index = index - 1
         else:
-            # FS value is not present or not consistent
-            if current_depth is not None and current_depth - start_depth > 0.3:
-                # Store the thickness as 'H1' in another part of the DataFrame
+            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
+                last_liq_depth = None
+                start_liq_depth = None
+            elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
                 h1_thickness = df.loc[h1_index][depth_column_name]
+                if h1_thickness > 10:
+                    h1_thickness = 10
                 break
-
-            # Reset variables for the next consistent layer
-            current_depth = None
-            start_depth = None
 
     for index, row in df.iterrows():
         depth = row[depth_column_name]
@@ -559,7 +565,6 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
         if depth > 10:
             break
 
-
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
     df.at[0, h1_column_name] = h1_thickness
@@ -567,49 +572,54 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
 
     return df
 
-def LPI(df,depth_column_name, FS_column_name,date):
-  def Integrate_LPI(z):
-    return(1 - row[FS_column_name]) * (10 - 0.5 * z)
 
-  LPI = 0
-  for i, row in df.iterrows():
-    depth = row[depth_column_name]
-    FS = row[FS_column_name]
-    if depth <=20 and FS <= 1:
-      if i == 0:
-        thick = df.loc[i + 1][depth_column_name] - depth
-        start_depth = depth - thick
-        LPI += integrate.quad(Integrate_LPI, start_depth, depth)[0]
-      else:
-          depth_before = df.loc[i - 1][depth_column_name]
-          LPI += integrate.quad(Integrate_LPI, depth_before,depth)[0]
-  df.at[0,"LPI_"+date] = LPI
+def LPI(df, depth_column_name, FS_column_name, date):
+    def Integrate_LPI(z):
+        return (1 - row[FS_column_name]) * (10 - 0.5 * z)
 
-  return df
-def LPIish (df,depth_column_name, FS_column_name,date,h1_column_name):
-  def Integrate_LPIish(z):
-    c = 0
-    # print(row[depth_column_name], 5/(25.56*(1-row[FS_column_name])))
-    mFS = np.exp(5/(25.56*(1-row[FS_column_name])))-1
-    if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
-      c=(1-row[FS_column_name])
-    return (25.56/z)*c
-  LPIish = 0
-  for i, row in df.iterrows():
-    h1 = df.loc[0][h1_column_name]
-    depth = row[depth_column_name]
-    if h1 <= depth <= 20:
-      if depth < 0.4:
-        continue
-      if i == 0:
-        thick = df.loc[i+1][depth_column_name] - depth
-        start_depth = depth - thick
-        LPIish += integrate.quad(Integrate_LPIish, start_depth,depth)[0]
-      else:
-        LPIish += integrate.quad(Integrate_LPIish, df.loc[i-1][depth_column_name], depth)[0]
-  df.at[0,"LPIish_" + date] = LPIish
+    LPI = 0
+    for i, row in df.iterrows():
+        depth = row[depth_column_name]
+        FS = row[FS_column_name]
+        if depth <= 20 and FS <= 1:
+            if i == 0:
+                thick = df.loc[i + 1][depth_column_name] - depth
+                start_depth = depth - thick
+                LPI += integrate.quad(Integrate_LPI, start_depth, depth)[0]
+            else:
+                depth_before = df.loc[i - 1][depth_column_name]
+                LPI += integrate.quad(Integrate_LPI, depth_before, depth)[0]
+    df.at[0, "LPI_" + date] = LPI
 
-  return df
+    return df
+
+
+def LPIish(df, depth_column_name, FS_column_name, date, h1_column_name):
+    def Integrate_LPIish(z):
+        c = 0
+        # print(row[depth_column_name], 5/(25.56*(1-row[FS_column_name])))
+        mFS = np.exp(5 / (25.56 * (1 - row[FS_column_name]))) - 1
+        if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
+            c = (1 - row[FS_column_name])
+        return (25.56 / z) * c
+
+    LPIish = 0
+    for i, row in df.iterrows():
+        h1 = df.loc[0][h1_column_name]
+        depth = row[depth_column_name]
+        if h1 <= depth <= 20:
+            if depth < 0.4:
+                continue
+            if i == 0:
+                thick = df.loc[i + 1][depth_column_name] - depth
+                start_depth = depth - thick
+                LPIish += integrate.quad(Integrate_LPIish, start_depth, depth)[0]
+            else:
+                LPIish += integrate.quad(Integrate_LPIish, df.loc[i - 1][depth_column_name], depth)[0]
+    df.at[0, "LPIish_" + date] = LPIish
+
+    return df
+
 
 def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
     def A1(qc1ncs):
@@ -655,7 +665,6 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
     LSN = 0
     total_rows_qc1ncs_qualifies = 0
 
-
     for i, row in df.iterrows():
         qc1ncs = row[qc1ncs_column_name]
         eps = np.nan
@@ -670,7 +679,6 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
                     below_range_counter += 1
                 else:
                     eps = A1(qc1ncs)
-
 
             if .5 <= FS <= .6 and 147 <= qc1ncs <= 200:
                 eps = interpolator(A1(qc1ncs), .5, A3(qc1ncs), .6, FS)
@@ -720,11 +728,12 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
 
     df.at[0, "LSN_" + date] = LSN
 
-
     # print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
 
     return df
-def Towhata_2016 (df,LPI_column_name,H1_column_name):
+
+
+def Towhata_2016(df, LPI_column_name, H1_column_name):
     lpi_val = df.iloc[0][LPI_column_name]
     h1_val = df.iloc[0][H1_column_name]
 
@@ -742,6 +751,7 @@ def Towhata_2016 (df,LPI_column_name,H1_column_name):
             qualification = "C"
 
     return qualification
+
 
 def preforo_check(df, GWT_column_name, preforo_column_name):
     GWT_val = df.loc[0][GWT_column_name]
