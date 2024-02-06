@@ -77,8 +77,8 @@ def soil_parameters(df):
             if row['fs (kPa)'] <= 0:
                 df.at[i, 'Fr (%)'] = 0
             else:
-                df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
-                    float)
+                df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qc calc"] - row['Total Stress (kPa)']) * 100).astype(
+                    float) # TODO: maybe change this back to qt depending on which method we want to use
     else:
         warnings.warn('GWT marked as 0 or not provided')
 
@@ -97,7 +97,7 @@ def soil_parameters(df):
         df['Cn'] = [1.7 if x >= 1.7 else x for x in df['Cn']]
 
         # Calculate Qtn
-        df['Qtn'] = (((df["qt calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float)
+        df['Qtn'] = (((df["qc calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float) # TODO: change qc calc back to qt calc
 
         # Calculate Ic
         for i in range(len(df.index)):
@@ -155,10 +155,13 @@ def soil_parameters(df):
 
     while not counter:
         # Cn calculation
-        df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** (1.338 - .249 * (df['qc1'] / Pa) ** .264)
+        df['m'] = (1.338 - .249 * (df['qc1'] / Pa) ** .264)
+        df['m'] = [0.264 if x < 0.264 else x for x in df['m']]
+        df['m'] = [0.782 if x > 0.782 else x for x in df['m']]
+        df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** df['m']
         df['Cn2'] = [1.7 if x >= 1.7 else x for x in df['Cn2']]
 
-        # New qcn1 calculation
+        # New qc1 calculation
         df['qc2'] = df['Cn2'] * df['qc calc']
 
         # Dr calculation
@@ -431,9 +434,13 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
             alpha = -1.012 - 1.126 * np.sin(
                 row['Depth (m)'] / 11.73 + 5.133)  # rd is only good for depths less than 20 meters (pg 68)
             beta = .106 + .118 * np.sin(row['Depth (m)'] / 11.28 + 5.142)
-            if row['Depth (m)'] < 20:
+            if row['Depth (m)'] <= 34: # TODO: change back to <20?
                 df.at[i, 'rd_' + date1] = np.exp(alpha + beta * Magnitude1)
                 df.at[i, 'rd_' + date2] = np.exp(alpha + beta * Magnitude2)
+            else:
+                df.at[i, 'rd_' + date1] = 0.12 * np.exp(0.22 * Magnitude1)
+                df.at[i, 'rd_' + date2] = 0.12 * np.exp(0.22 * Magnitude2)
+
 
             row = df.loc[i]
 
@@ -457,11 +464,10 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
             df.at[i, "qc1ncs"] = qc1ncs
 
             df.at[i, "CRR_" + date1] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF1 / row["Kσ"]
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF1 / row["Kσ"]
 
             df.at[i, "CRR_" + date2] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) / MSF2 / row[
-                                           "Kσ"]
+                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF2 / row["Kσ"]
 
             row = df.loc[i]
 
@@ -616,8 +622,10 @@ def LPIish(df, depth_column_name, FS_column_name, date, h1_column_name):
                 LPIish += integrate.quad(Integrate_LPIish, start_depth, depth)[0]
             else:
                 LPIish += integrate.quad(Integrate_LPIish, df.loc[i - 1][depth_column_name], depth)[0]
-    df.at[0, "LPIish_" + date] = LPIish
-
+    if h1_column_name[:8] == "h1_basic":
+        df.at[0, "LPIish_" + 'basic_' + date] = LPIish
+    else:
+        df.at[0, "LPIish_" + 'cumulative_' + date] = LPIish
     return df
 
 

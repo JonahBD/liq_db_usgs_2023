@@ -11,8 +11,8 @@ nan_preforo = []
 
 ################ USER INPUTS ############################
 american_date = True # True or False
-input_folder_path = r"C:\Users\jdundas2\Documents\Validating Graphs\og files"
-export_folder_path = r"C:\Users\jdundas2\Documents\Validating Graphs\soil parameters"
+input_folder_path = r"J:\groups\liqu\Cliq settings changed\Step 5 our files"
+export_folder_path = r"J:\groups\liqu\Cliq settings changed\soil parameters"
 vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
@@ -93,8 +93,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              "CRR_"+date1, 'CSR_'+date2, 'CRR_'+date2, "FS_"+date1, "FS_"+date2,'h1_basic_'+date1,'h2_basic_'+date1,'h1_basic_'+date2,'h2_basic_'+date2,
              'h1_cumulative_'+date1,'h2_cumulative_'+date1,'h1_cumulative_'+date2,'h2_cumulative_'+date2, "LPI_"+date1,"LPI_"+date2,
              f'towhata_basic_{date1}', f'towhata_cumulative_{date1}', f'towhata_basic_{date2}', f'towhata_cumulative_{date2}',
-             "LPIish_"+date1,"LPIish_"+date2, 'LSN_'+date1, 'LSN_'+date2,
-             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_'+date1, 'PGA_'+date2,'Liquefaction']] #TODO: should we move date to the end so that it's easy to take out for the ML model code?
+             "LPIish_basic_"+date1,"LPIish_basic_"+date2, "LPIish_cumulative_"+date1,"LPIish_cumulative_"+date2, 'LSN_'+date1, 'LSN_'+date2,
+             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA_'+date1, 'PGA_'+date2,'Liquefaction']]
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)
