@@ -156,8 +156,8 @@ def soil_parameters(df):
     while not counter:
         # Cn calculation
         df['m'] = (1.338 - .249 * (df['qc1'] / Pa) ** .264)
-        df['m'] = [0.264 if x < 0.264 else x for x in df['m']]
-        df['m'] = [0.782 if x > 0.782 else x for x in df['m']]
+        # df['m'] = [0.264 if x < 0.264 else x for x in df['m']] # NOTE: the cap on "m" is based on Robertson's method?
+        # df['m'] = [0.782 if x > 0.782 else x for x in df['m']]
         df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** df['m']
         df['Cn2'] = [1.7 if x >= 1.7 else x for x in df['Cn2']]
 
@@ -420,8 +420,19 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
                         1 / .264)  # from Dr I iterative calc (we backcalculate here)
         row = df.loc[i]
 
+        FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper
+        if FC > 100:
+            FC = 100
+        elif FC < 0:
+            FC = 0
+        qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(
+            1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
+        df.at[i, "qc1ncs"] = qc1ncs
+
+        row = df.loc[i]
+
         if 2.6 > row["Ic"] > 0:
-            c_sigma = 1 / (37.3 - 8.27 * row['qc1n'] ** .264)
+            c_sigma = 1 / (37.3 - 8.27 * row['qc1n'] ** .264)# NOTE: Idriss and Boulganger 2008 uses qc1n while I&B 2014 uses qc1ncs
             if c_sigma > .3:
                 c_sigma = .3
 
@@ -441,7 +452,6 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
                 df.at[i, 'rd_' + date1] = 0.12 * np.exp(0.22 * Magnitude1)
                 df.at[i, 'rd_' + date2] = 0.12 * np.exp(0.22 * Magnitude2)
 
-
             row = df.loc[i]
 
             # Calcuating CSR
@@ -454,15 +464,6 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
             row = df.loc[i]
 
             # Calcuatig CRR
-            FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper
-            if FC > 100:
-                FC = 100
-            elif FC < 0:
-                FC = 0
-            qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(
-                1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
-            df.at[i, "qc1ncs"] = qc1ncs
-
             df.at[i, "CRR_" + date1] = np.exp(
                 qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF1 / row["Kσ"]
 
@@ -595,7 +596,23 @@ def LPI(df, depth_column_name, FS_column_name, date):
             else:
                 depth_before = df.loc[i - 1][depth_column_name]
                 LPI += integrate.quad(Integrate_LPI, depth_before, depth)[0]
+
+    #LPI evaluation from iwasaki 1984 pg 52
+    if LPI == 0:
+        result = "Liquefaction risk is very low"
+        binary = 0
+    elif LPI <= 5:
+        result = "Liquefaction risk is low"
+        binary = 0
+    elif LPI <= 15:
+        result = "Liquefaction risk is high"
+        binary = 1
+    elif LPI > 15 :
+        result = "Liquefaction risk is very high"
+        binary = 1
+
     df.at[0, "LPI_" + date] = LPI
+    df.at[0, f'LPI_{date}_results'] = binary
 
     return df
 
@@ -622,10 +639,21 @@ def LPIish(df, depth_column_name, FS_column_name, date, h1_column_name):
                 LPIish += integrate.quad(Integrate_LPIish, start_depth, depth)[0]
             else:
                 LPIish += integrate.quad(Integrate_LPIish, df.loc[i - 1][depth_column_name], depth)[0]
+
+    #LPIish found on page 782 of maurer 2015 paper
+    if LPIish >= 5:
+        result = "Liquefaction manifestation is expected"
+        binary = 1
+    elif LPIish < 5:
+        result = "Liquefaction manifestation is not expected"
+        binary = 0
+
     if h1_column_name[:8] == "h1_basic":
-        df.at[0, "LPIish_" + 'basic_' + date] = LPIish
+        df.at[0, "LPIish_basic_" + date] = LPIish
+        df.at[0, f'LPIish_basic_{date}_results'] = binary
     else:
         df.at[0, "LPIish_" + 'cumulative_' + date] = LPIish
+        df.at[0, f'LPIish_cumulative_{date}_results'] = binary
     return df
 
 
@@ -648,13 +676,13 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
     def A10(qc1ncs):
         return 64 * qc1ncs ** -.93
 
-    def A11(qc1nc):
+    def A11(qc1ncs):
         return 11 * qc1ncs ** -.65
 
-    def A12(qc1nc):
+    def A12(qc1ncs):
         return 9.7 * qc1ncs ** -.69
 
-    def A13(qc1nc):
+    def A13(qc1ncs):
         return 7.6 * qc1ncs ** -.71
 
     def A14(qc1ncs):
@@ -671,7 +699,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
 
     below_range_counter = 0
     LSN = 0
-    total_rows_qc1ncs_qualifies = 0
+    # total_rows_qc1ncs_qualifies = 0
 
     for i, row in df.iterrows():
         qc1ncs = row[qc1ncs_column_name]
@@ -679,14 +707,9 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
         FS = row[FS_column_name]
         depth = row[depth_column_name]
         if row[depth_column_name] <= 20 and not np.isnan(qc1ncs):
-            total_rows_qc1ncs_qualifies += 1
+            # total_rows_qc1ncs_qualifies += 1
 
-            if 20 <= qc1ncs <= 200:
-                if qc1ncs < 33:
-                    eps = 10
-                    below_range_counter += 1
-                else:
-                    eps = A1(qc1ncs)
+            eps = A1(qc1ncs)
 
             if .5 <= FS <= .6 and 147 <= qc1ncs <= 200:
                 eps = interpolator(A1(qc1ncs), .5, A3(qc1ncs), .6, FS)
@@ -709,41 +732,58 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, date):
                 else:
                     eps = interpolator(A7(qc1ncs), .8, A9(qc1ncs), .9, FS)
 
-            elif .9 <= FS <= 1 and 20 <= qc1ncs <= 200:  # check out these bounds and the ones below
+            elif .9 <= FS <= 1 and 0 <= qc1ncs <= 200:  # check out these bounds and the ones below
                 if qc1ncs < 60:
                     eps = interpolator(eps, .9, A10(qc1ncs), 1, FS)
                 else:
                     eps = interpolator(A9(qc1ncs), .9, A10(qc1ncs), 1, FS)
 
-            elif 1 <= FS <= 1.1 and 20 <= qc1ncs <= 200:
+            elif 1 <= FS <= 1.1 and 0 <= qc1ncs <= 200:
                 eps = interpolator(A10(qc1ncs), 1, A11(qc1ncs), 1.1, FS)
 
-            elif 1.1 <= FS <= 1.2 and 20 <= qc1ncs <= 200:
+            elif 1.1 <= FS <= 1.2 and 0 <= qc1ncs <= 200:
                 eps = interpolator(A11(qc1ncs), 1.1, A12(qc1ncs), 1.2, FS)
 
-            elif 1.2 <= FS <= 1.3 and 20 <= qc1ncs <= 200:
+            elif 1.2 <= FS <= 1.3 and 0 <= qc1ncs <= 200:
                 eps = interpolator(A12(qc1ncs), 1.2, A13(qc1ncs), 1.3, FS)
 
-            elif FS >= 1.3 and 20 <= qc1ncs <= 200:
+            elif FS >= 1.3 and 0 <= qc1ncs <= 200:
                 if FS > 2:
                     FS = 2
                 eps = interpolator(A13(qc1ncs), 1.3, A14(qc1ncs), 2, FS)
+
+            if eps > 10: # NOTE: This capped value of 10 and extrapolating values when qc1ncs < 33 is Rollin's idea
+                eps = 10
 
         if i == 0:
             LSN = 0
         elif not np.isnan(eps):
             LSN += integrate.quad(Integrate_LSN, df.loc[i - 1][depth_column_name], depth)[0]
 
+        df.at[i,'eps_' + date] = eps
+
+    # LSN found in Maurer 2015 calibrating LSN paper
+    if LSN < 20:
+        result = "Little to no manifestation of liquefaction expected"
+        binary = 0
+    elif LSN < 40:
+        result = "Moderate to severe manifestation of liquefaction is expected"
+        binary = 0.5
+    elif LSN >= 40:
+        result = "Major manifestation of liquefaction expected"
+        binary = 1
+
     df.at[0, "LSN_" + date] = LSN
+    df.at[0, f'LSN_{date}_results'] = binary
 
     # print("Number of qc1ncs values below range:" ,below_range_counter,"/",total_rows_qc1ncs_qualifies)
 
     return df
 
 
-def Towhata_2016(df, LPI_column_name, H1_column_name):
+def Towhata_2016(df, LPI_column_name, h1_column_name, date):
     lpi_val = df.iloc[0][LPI_column_name]
-    h1_val = df.iloc[0][H1_column_name]
+    h1_val = df.iloc[0][h1_column_name]
 
     if h1_val > 5:
         qualification = "A"
@@ -758,7 +798,25 @@ def Towhata_2016(df, LPI_column_name, H1_column_name):
         else:
             qualification = "C"
 
-    return qualification
+    #Towhata paper page 12 on pdf
+    if qualification == "A":
+        result = "Unlikely to liquefy"
+        binary = 0
+    elif qualification == "B1" or qualification == "B2" or qualification == "B3":
+        result = "Low probability"
+        binary = 0.5
+    elif qualification == "C":
+        result = "High probability"
+        binary = 1
+
+    if h1_column_name[:8] == "h1_basic":
+        df.at[0, f'towhata_basic_{date}'] = qualification
+        df.at[0, f'towhata_basic_{date}_results'] = binary
+    else:
+        df.at[0, f'towhata_cumulative_{date}'] = qualification
+        df.at[0, f'towhata_cumulative_{date}_results'] = binary
+
+    return df
 
 
 def preforo_check(df, GWT_column_name, preforo_column_name):
