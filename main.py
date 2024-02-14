@@ -8,12 +8,13 @@ from tqdm import tqdm
 missing_pga = []
 preforo_below_GWT = []
 nan_preforo = []
+missing_date = []
 
 ################ USER INPUTS ############################
 american_date = True # True or False
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
-vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values.xlsx"
+input_folder_path = r"D:\Italy CPT stuff\OG fiels no DMT"
+export_folder_path = r"D:\Italy CPT stuff\Soil Parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 date1 = "20may"
@@ -26,19 +27,23 @@ FS2 = "FS_" + date2
 sites = []
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls")
+    site = os.path.basename(filename).rstrip(".xls")[8:]
     sites.append(site)
 
 loop = tqdm(total=(len(sites)))
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls")
+    site = os.path.basename(filename).rstrip(".xls")[8:]
     # print(site)
     loop.set_description(f"soil parameters - {site} :")
 
     df = pd.read_excel(filename)
 
     date = df.loc[0][date_column_name]
+    if date == "-" or date == float('NaN'):
+        date = float("NaN")
+        missing_date.append(site)
+
     if american_date:
         if isinstance(date,pd.Timestamp):
             date = date.strftime('%m') + '/' + date.strftime('%d') + '/' + date.strftime('%Y')
@@ -105,6 +110,7 @@ loop.close()
 pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
 nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
-sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df], axis=1)
+missing_date_df = pd.DataFrame({'Missing Date':missing_date})
+sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df], axis=1)
 export_folder_path_check_df = os.path.join(export_folder_path,'sites_to_check.xlsx')
 sites_to_check.to_excel(export_folder_path_check_df, index=False)
