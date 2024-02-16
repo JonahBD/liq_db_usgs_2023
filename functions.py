@@ -502,11 +502,12 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
         if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
             last_liq_depth = depth
             if start_liq_depth is None:
-                start_liq_depth = df.loc[index - 1][depth_column_name]
                 if index == 0:
+                    start_liq_depth = df.loc[index][depth_column_name]
                     h1_index = 0
                 else:
                     h1_index = index - 1
+                    start_liq_depth = df.loc[index - 1][depth_column_name]
         else:
             if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
                 last_liq_depth = None
@@ -542,11 +543,12 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
         if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
             last_liq_depth = depth
             if start_liq_depth is None:
-                start_liq_depth = df.loc[index - 1][depth_column_name]
                 if index == 0:
                     h1_index = 0
+                    start_liq_depth = df.loc[index, depth_column_name]
                 else:
                     h1_index = index - 1
+                    start_liq_depth = df.loc[index - 1][depth_column_name]
         else:
             if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
                 last_liq_depth = None
