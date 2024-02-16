@@ -84,6 +84,7 @@ def soil_parameters(df):
 
     # Qt calculation
     df['Qt'] = [(x - y) / z for x, y, z in zip(df["qt calc"], df["Total Stress (kPa)"], df['Effective Stress (kPa)'])]
+    df["Qt"] = [0 if x < 0 else x for x in df["Qt"]]
     # ///////////////////////////////////////////// end GENERAL CALCULATIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     # ////////////////////////////////////////////// Ic CALCULATION \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -463,12 +464,14 @@ def FS_liq(df, Magnitude1, Magnitude2, date1, date2):  # FS equation from Idriss
 
             row = df.loc[i]
 
-            # Calcuatig CRR
-            df.at[i, "CRR_" + date1] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF1 / row["Kσ"]
+            # Calcuatig CRR # NOTE: When qc1ncs is greater than about 250 it will throw an overflow error and generates inf values (ex. 036010P218CPTU218)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="overflow encountered in exp")
+                df.at[i, "CRR_" + date1] = np.exp(
+                    qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF1 / row["Kσ"]
 
-            df.at[i, "CRR_" + date2] = np.exp(
-                qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF2 / row["Kσ"]
+                df.at[i, "CRR_" + date2] = np.exp(
+                    qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF2 / row["Kσ"]
 
             row = df.loc[i]
 
@@ -621,12 +624,14 @@ def LPI(df, depth_column_name, FS_column_name, date):
 
 def LPIish(df, depth_column_name, FS_column_name, date, h1_column_name):
     def Integrate_LPIish(z):
-        c = 0
-        # print(row[depth_column_name], 5/(25.56*(1-row[FS_column_name])))
-        mFS = np.exp(5 / (25.56 * (1 - row[FS_column_name]))) - 1
-        if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
-            c = (1 - row[FS_column_name])
-        return (25.56 / z) * c
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="overflow encountered in exp")
+            c = 0
+            # print(row[depth_column_name], 5/(25.56*(1-row[FS_column_name])))
+            mFS = np.exp(5 / (25.56 * (1 - row[FS_column_name]))) - 1
+            if row[FS_column_name] <= 1 and (h1 * mFS) <= 3:
+                c = (1 - row[FS_column_name])
+            return (25.56 / z) * c
 
     LPIish = 0
     for i, row in df.iterrows():

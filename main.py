@@ -9,13 +9,14 @@ missing_pga = []
 preforo_below_GWT = []
 nan_preforo = []
 missing_date = []
-gwt_or_preforo_wrong_type = []
+GWT_or_preforo_wrong_type = []
+GWT_zero_nan = []
 
 ################ USER INPUTS ############################
-american_date = True # True or False
-input_folder_path = r"E:\Italy CPT stuff\OG fiels no DMT"
-export_folder_path = r"E:\Italy CPT stuff\Soil Parameters"
-vals_pga_and_liq = r"E:\Italy CPT stuff\PGA-liq values 02 13 23.xlsx"
+# american_date = True # True or False
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG fiels no DMT - Copy"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil_parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 date1 = "20may"
@@ -28,17 +29,20 @@ FS2 = "FS_" + date2
 sites = []
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls")[8:]
+    site = os.path.basename(filename).rstrip(".xls").lstrip("Copy of")
     sites.append(site)
 
 loop = tqdm(total=(len(sites)))
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls")[8:]
+    site = os.path.basename(filename).rstrip(".xls").lstrip("Copy of")
     # print(site)
     loop.set_description(f"soil parameters - {site} :")
 
     df = pd.read_excel(filename)
+
+    if df.loc[0]['GWT [m]'] == 0 or df.loc[0]['GWT [m]'] == float('NaN'):
+        GWT_zero_nan.append(site)
 
     date = df.loc[0][date_column_name]
     if date == "-" or date == float('NaN'):
@@ -47,18 +51,17 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     gwt = df.loc[0]['GWT [m]']
     if not isinstance(gwt, (int, float)):
-        gwt_or_preforo_wrong_type.append(site)
+        GWT_or_preforo_wrong_type.append(site)
         continue
     preforo = df.loc[0]["preforo [m]"]
     if not isinstance(preforo, (int, float)):
-        gwt_or_preforo_wrong_type.append(site)
+        GWT_or_preforo_wrong_type.append(site)
         continue
 
-
-    if american_date:
-        if isinstance(date,pd.Timestamp):
-            date = date.strftime('%m') + '/' + date.strftime('%d') + '/' + date.strftime('%Y')
-    df.at[0, date_column_name] = pd.to_datetime(date, dayfirst=True)
+    if isinstance(date,pd.Timestamp):
+        df.at[0, date_column_name] = date
+    else:
+        df.at[0, date_column_name] = pd.to_datetime(date, dayfirst=True)
 
     export_folder_path_df = os.path.join(export_folder_path,site + '.xlsx')
 
@@ -122,7 +125,8 @@ pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
 nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
 missing_date_df = pd.DataFrame({'Missing Date':missing_date})
-weird_gwt_preforo_df = pd.DataFrame({'gwt or preforo wrong type':gwt_or_preforo_wrong_type})
+weird_gwt_preforo_df = pd.DataFrame({'gwt or preforo wrong type':GWT_or_preforo_wrong_type})
+GWT_zero_nan_df = pd.DataFrame({'GWT zero or missing':GWT_zero_nan})
 sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df,weird_gwt_preforo_df], axis=1)
 export_folder_path_check_df = os.path.join(export_folder_path,'sites_to_check.xlsx')
 sites_to_check.to_excel(export_folder_path_check_df, index=False)
