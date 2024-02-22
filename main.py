@@ -14,9 +14,9 @@ GWT_zero_nan = []
 GWT_zero_confirmed = ["038022P239CPTU245",'038016P302CPTU302', '038003P980CPTU1080']
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
-export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Testing\output"
-vals_pga_and_liq = r"E:\Italy CPT stuff\PGA-liq values 02 13 23.xlsx"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -60,7 +60,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     export_folder_path_df = os.path.join(export_folder_path,site + '.xlsx')
 
-    df = soil_parameters(df)
+    df = soil_parameters(df, site)
 
     try:
         df = PGA_insertion(df,vals_pga_and_liq, site)

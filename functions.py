@@ -4,7 +4,7 @@ import warnings
 import scipy.integrate as integrate
 
 
-def soil_parameters(df):
+def soil_parameters(df, site):
     Pa = 101.325  # Atmospheric pressure in kPa
 
     # /////////////////////////////////////////////// COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -80,7 +80,8 @@ def soil_parameters(df):
                 df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qc calc"] - row['Total Stress (kPa)']) * 100).astype(
                     float) # TODO: maybe change this back to qt depending on which method we want to use
     else:
-        warnings.warn('GWT marked as 0 or not provided')
+        if site not in GWT_zero_confirmed:
+            warnings.warn('GWT marked as 0 or not provided')
 
     # Qt calculation
     df['Qt'] = [(x - y) / z for x, y, z in zip(df["qt calc"], df["Total Stress (kPa)"], df['Effective Stress (kPa)'])]
@@ -156,7 +157,7 @@ def soil_parameters(df):
 
     while not counter:
         # Cn calculation
-        df['m'] = (1.338 - .249 * (df['qc1'] / Pa) ** .264)
+        df['m'] = (1.338 - 0.249 * (df['qc1'] / Pa) ** 0.264)
         # df['m'] = [0.264 if x < 0.264 else x for x in df['m']] # NOTE: the cap on "m" is based on Robertson's method?
         # df['m'] = [0.782 if x > 0.782 else x for x in df['m']]
         df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** df['m']
@@ -189,6 +190,7 @@ def soil_parameters(df):
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
                     break
+
         counter = counter1
 
     # //////////////////////////////////// end Dr CALCULATION Idriss and Boulanger 2008 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
