@@ -3,10 +3,8 @@ import glob, os
 from tqdm import tqdm
 
 ################ USER INPUTS ############################
-input_folder_path = r"E:\Italy CPT stuff\testing"
-export_folder_path = r"E:\Italy CPT stuff"
-date1 = "20may"
-date2 = "29may"
+input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters"
+export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters\liq param sheet"
 #########################################################
 
 sites = []
@@ -20,8 +18,10 @@ loop = tqdm(total=(len(sites)))
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     site = os.path.basename(filename).rstrip(".xls")
-    # print(site)
-    loop.set_description(f"soil parameters - {site} :")
+    loop.set_description(f"Loading - {site} :")
+
+    if site == "sites_to_check":
+        continue
 
     df = pd.read_excel(filename)
 
@@ -29,53 +29,39 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     #Columns to add to liq sheet
     liq_df.at[indx_counter,"site"] = site
 
-    liq_df.at[indx_counter,"LPI_"+date1] = df.loc[0]["LPI_"+date1]
-    liq_df.at[indx_counter, "LPI_" + date2] = df.loc[0]["LPI_" + date2]
+    liq_df.at[indx_counter,"LPI"] = df.loc[0]["LPI"]
 
-    liq_df.at[indx_counter, f'towhata_basic_{date1}'] = df.loc[0][f'towhata_basic_{date1}']
-    liq_df.at[indx_counter, f'towhata_basic_{date2}'] = df.loc[0][f'towhata_basic_{date2}']
+    liq_df.at[indx_counter, f'towhata_basic'] = df.loc[0][f'towhata_basic']
 
-    liq_df.at[indx_counter, f'towhata_basic_{date2}'] = df.loc[0][f'towhata_basic_{date2}']
-    liq_df.at[indx_counter, f'towhata_basic_{date1}'] = df.loc[0][f'towhata_basic_{date1}']
+    liq_df.at[indx_counter, f'towhata_basic'] = df.loc[0][f'towhata_basic']
 
-    liq_df.at[indx_counter, f'towhata_cumulative_{date1}'] = df.loc[0][f'towhata_cumulative_{date1}']
-    liq_df.at[indx_counter, f'towhata_cumulative_{date2}'] = df.loc[0][f'towhata_cumulative_{date2}']
+    liq_df.at[indx_counter, f'towhata_cumulative'] = df.loc[0][f'towhata_cumulative']
 
-    liq_df.at[indx_counter, "LPIish_basic_"+date1] = df.loc[0]["LPIish_basic_"+date1]
-    liq_df.at[indx_counter, "LPIish_basic_" + date2] = df.loc[0]["LPIish_basic_" + date2]
+    liq_df.at[indx_counter, "LPIish_basic"] = df.loc[0]["LPIish_basic"]
 
-    liq_df.at[indx_counter, "LPIish_cumulative_"+date1] = df.loc[0]["LPIish_cumulative_"+date1]
-    liq_df.at[indx_counter, "LPIish_cumulative_" + date2] = df.loc[0]["LPIish_cumulative_" + date2]
+    liq_df.at[indx_counter, "LPIish_cumulative"] = df.loc[0]["LPIish_cumulative"]
 
-    liq_df.at[indx_counter, 'LSN_'+date1] = df.loc[0]['LSN_'+date1]
-    liq_df.at[indx_counter, 'LSN_' + date2] = df.loc[0]['LSN_' + date2]
+    liq_df.at[indx_counter, 'LSN'] = df.loc[0]['LSN']
 
     #Results section
-    liq_df.at[indx_counter, f'LPI_{date1}_results'] = df.loc[0][f'LPI_{date1}_results']
-    liq_df.at[indx_counter, f'LPI_{date2}_results'] = df.loc[0][f'LPI_{date2}_results']
+    liq_df.at[indx_counter, f'LPI_results'] = df.loc[0][f'LPI_results']
 
-    liq_df.at[indx_counter, f'towhata_basic_{date1}_results'] = df.loc[0][f'towhata_basic_{date1}_results']
-    liq_df.at[indx_counter, f'towhata_basic_{date2}_results'] = df.loc[0][f'towhata_basic_{date2}_results']
+    liq_df.at[indx_counter, f'towhata_basic_results'] = df.loc[0][f'towhata_basic_results']
 
-    liq_df.at[indx_counter, f'towhata_basic_{date2}_results'] = df.loc[0][f'towhata_basic_{date2}_results']
-    liq_df.at[indx_counter, f'towhata_basic_{date1}_results'] = df.loc[0][f'towhata_basic_{date1}_results']
+    liq_df.at[indx_counter, f'towhata_basic_results'] = df.loc[0][f'towhata_basic_results']
 
-    liq_df.at[indx_counter, f'towhata_cumulative_{date1}_results'] = df.loc[0][f'towhata_cumulative_{date1}_results']
-    liq_df.at[indx_counter, f'towhata_cumulative_{date2}_results'] = df.loc[0][f'towhata_cumulative_{date2}_results']
+    liq_df.at[indx_counter, f'towhata_cumulative_results'] = df.loc[0][f'towhata_cumulative_results']
 
-    liq_df.at[indx_counter, "LPIish_basic_" + date1 + "_results"] = df.loc[0]["LPIish_basic_" + date1 + "_results"]
-    liq_df.at[indx_counter, "LPIish_basic_" + date2 + "_results"] = df.loc[0]["LPIish_basic_" + date2 + "_results"]
+    liq_df.at[indx_counter, "LPIish_basic" + "_results"] = df.loc[0]["LPIish_basic" + "_results"]
 
-    liq_df.at[indx_counter, "LPIish_cumulative_" + date1 + "_results"] = df.loc[0]["LPIish_cumulative_" + date1 + "_results"]
-    liq_df.at[indx_counter, "LPIish_cumulative_" + date2 + "_results"] = df.loc[0]["LPIish_cumulative_" + date2 + "_results"]
+    liq_df.at[indx_counter, "LPIish_cumulative" + "_results"] = df.loc[0]["LPIish_cumulative" + "_results"]
 
-    liq_df.at[indx_counter, 'LSN_' + date1 + "_results"] = df.loc[0]['LSN_' + date1 + "_results"]
-    liq_df.at[indx_counter, 'LSN_' + date2 + "_results"] = df.loc[0]['LSN_' + date2 + "_results"]
+    liq_df.at[indx_counter, 'LSN' + "_results"] = df.loc[0]['LSN' + "_results"]
 
     liq_df.at[indx_counter, 'Liquefaction'] = df.loc[0]['Liquefaction']
 
     indx_counter += 1
     loop.update(1)
 loop.close()
-export_folder_liq_df = os.path.join(export_folder_path,'liq_results_all_tests')
-liq_df.to_excel(f'{export_folder_liq_df}.xlsx', index=False)
+
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled.xlsx', index=False)
