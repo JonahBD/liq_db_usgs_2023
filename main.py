@@ -14,8 +14,8 @@ GWT_zero_nan = []
 GWT_zero_confirmed = ["038022P239CPTU245",'038016P302CPTU302', '038003P980CPTU1080']
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters (no dates) 2-23"
 vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
@@ -44,8 +44,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         date = float("NaN")
         missing_date.append(site)
 
-    gwt = df.loc[0]['GWT [m]']
-    if not isinstance(gwt, (int, float)):
+    GWT = df.loc[0]['GWT [m]']
+    if not isinstance(GWT, (int, float)):
         GWT_or_preforo_wrong_type.append(site)
         continue
     preforo = df.loc[0]["preforo [m]"]
@@ -90,9 +90,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     df = LPIish(df, depth_column_name, "FS", "h1_basic")
     df = LPIish(df, depth_column_name, "FS", "h1_cumulative")
 
-    df = LSN(df, depth_column_name, "qc1ncs", "FS")
+    df = LSN(df, depth_column_name, "qc1ncs", "FS", GWT)
 
-    df = LD(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)" )
+    # df = LD(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)" )
 
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
@@ -112,8 +112,8 @@ pga_df = pd.DataFrame({'Missing PGA sites':missing_pga})
 preforo_df = pd.DataFrame({'Preforo is below GWT':preforo_below_GWT})
 nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
 missing_date_df = pd.DataFrame({'Missing Date':missing_date})
-weird_gwt_preforo_df = pd.DataFrame({'gwt or preforo wrong type':GWT_or_preforo_wrong_type})
+weird_GWT_preforo_df = pd.DataFrame({'GWT or preforo wrong type':GWT_or_preforo_wrong_type})
 GWT_zero_nan_df = pd.DataFrame({'GWT zero or missing':GWT_zero_nan})
-sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df,weird_gwt_preforo_df], axis=1)
+sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df,weird_GWT_preforo_df], axis=1)
 export_folder_path_check_df = os.path.join(export_folder_path,'sites_to_check.xlsx')
 sites_to_check.to_excel(export_folder_path_check_df, index=False)

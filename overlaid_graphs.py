@@ -7,7 +7,7 @@ import os, glob
 
 our_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
 cliq_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\graphs"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\graphs2"
 
 for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     our_data = pd.read_excel(file)
@@ -28,12 +28,12 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     c_CSR = np.array(cliq_data[cliq_data.columns[12]])
     c_k_sigma = np.array(cliq_data[cliq_data.columns[11]])
     c_Ic = np.array(cliq_data[cliq_data.columns[18]])
-    c_m = np.array(cliq_data[cliq_data.columns[19]])
+    # c_m = np.array(cliq_data[cliq_data.columns[19]])
     c_qc1N = np.array(cliq_data[cliq_data.columns[21]])
     c_qc1Ncs = np.array(cliq_data[cliq_data.columns[23]])
     c_CRR = np.array(cliq_data[cliq_data.columns[26]])
     c_FS = np.array(cliq_data[cliq_data.columns[27]])
-    c_LPI = np.array(cliq_data[cliq_data.columns[29]])
+    # c_LPI = np.array(cliq_data[cliq_data.columns[29]])
     c_rd = np.array(cliq_data[cliq_data.columns[7]])
     c_strain = np.array(cliq_data[cliq_data.columns[31]])
 
@@ -56,24 +56,24 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     fs = np.array(our_data[our_data.columns[2]])
     total_stress = np.array(our_data[our_data.columns[7]])
     effective_stress = np.array(our_data[our_data.columns[8]])
-    CSR = np.array(our_data[our_data.columns[39]])
+    CSR = np.array(our_data[our_data.columns[37]])
     CSR[CSR > 2] = 2
-    k_sigma = np.array(our_data[our_data.columns[36]])
+    k_sigma = np.array(our_data[our_data.columns[35]])
     Ic = np.array(our_data[our_data.columns[10]])
-    m = np.array(our_data[our_data.columns[15]])
+    # m = np.array(our_data[our_data.columns[15]])
     qc1N = np.array(our_data[our_data.columns[31]])
     qc1Ncs = np.array(our_data[our_data.columns[33]]) # Note: 3
-    CRR = np.array(our_data[our_data.columns[40]])
+    CRR = np.array(our_data[our_data.columns[38]])
     CRR[CRR > 4] = 4
-    FS = np.array(our_data[our_data.columns[43]])
+    FS = np.array(our_data[our_data.columns[39]])
     FS[FS > 2] = 2
-    LPI = np.array(our_data[our_data.columns[53]])
-    rd = np.array(our_data[our_data.columns[37]])
+    # LPI = np.array(our_data[our_data.columns[53]])
+    rd = np.array(our_data[our_data.columns[36]])
     strain = np.array(our_data[our_data.columns[34]])
 
-    our_columns = [qc, fs, total_stress, effective_stress, CSR, k_sigma, Ic, m, qc1N, qc1Ncs, CRR, FS, LPI, rd, strain]
-    column_names = ['qc', 'fs', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'm', 'qc1N', 'qc1Ncs', 'CRR', 'FS', 'LPI', 'rd_20may', 'eps_20may']
-    cliq_columns = [c_qc, c_fs, c_total_stress, c_effective_stress, c_CSR, c_k_sigma, c_Ic, c_m, c_qc1N, c_qc1Ncs, c_CRR, c_FS, c_LPI, c_rd, c_strain]
+    our_columns = [qc, fs, total_stress, effective_stress, CSR, k_sigma, Ic, qc1N, qc1Ncs, CRR, FS, rd, strain]
+    column_names = ['qc', 'fs', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'qc1N', 'qc1Ncs', 'CRR', 'FS', 'rd', 'eps']
+    cliq_columns = [c_qc, c_fs, c_total_stress, c_effective_stress, c_CSR, c_k_sigma, c_Ic, c_qc1N, c_qc1Ncs, c_CRR, c_FS, c_rd, c_strain]
     counter = 0
 
     for our_column, cliq_column in zip(our_columns, cliq_columns):

@@ -77,7 +77,7 @@ def soil_parameters(df, site):
             if row['fs (kPa)'] <= 0:
                 df.at[i, 'Fr (%)'] = 0
             else:
-                df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qc calc"] - row['Total Stress (kPa)']) * 100).astype(
+                df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
                     float) # TODO: maybe change this back to qt depending on which method we want to use
     else:
         if site not in GWT_zero_confirmed:
@@ -99,7 +99,7 @@ def soil_parameters(df, site):
         df['Cn'] = [1.7 if x >= 1.7 else x for x in df['Cn']]
 
         # Calculate Qtn
-        df['Qtn'] = (((df["qc calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float) # TODO: change qc calc back to qt calc
+        df['Qtn'] = (((df["qt calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float) # TODO: change qc calc back to qt calc
 
         # Calculate Ic
         for i in range(len(df.index)):
@@ -393,7 +393,7 @@ def PGA_insertion(df, PGA_filepath, site):
         df.at[0,"EQ"] = "20_may"
         df.at[1,"EQ"] = 6.1
     else:
-        df.at[0, 'PGA'] = pga_df.loc[site]['PGA_29may']
+        df.at[0, 'PGA'] = pga_df.loc[site]['PGA_29may'] # TODO: change this back to 29may when not comparing with cliq files
         df.at[0, "EQ"] = "29_may"
         df.at[1, "EQ"] = 5.9
     # df.at[0, 'PGA_20may'] = pga_df.loc[site]['PGA_20may']
@@ -661,7 +661,7 @@ def LPIish(df, depth_column_name, FS_column_name, h1_column_name):
     return df
 
 
-def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name):
+def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
     def A1(qc1ncs):
         return 102 * qc1ncs ** -.82
 
@@ -710,7 +710,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name):
         eps = np.nan
         FS = row[FS_column_name]
         depth = row[depth_column_name]
-        if row[depth_column_name] <= 20 and not np.isnan(qc1ncs):
+        if row[depth_column_name] <= 20 and not np.isnan(qc1ncs) and depth >= GWT:
             # total_rows_qc1ncs_qualifies += 1
 
             eps = A1(qc1ncs)
