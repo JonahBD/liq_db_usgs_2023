@@ -92,7 +92,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = LSN(df, depth_column_name, "qc1ncs", "FS")
 
-    df = LD(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)" )
+    df = LD(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", 'GWT [m]' )
 
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
@@ -100,7 +100,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'rd', "CSR",
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
-             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN',
+             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
              f'towhata_basic_results', f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results',
              f'LPIish_cumulative_results', f'LPI_results']]

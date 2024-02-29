@@ -822,60 +822,88 @@ def Towhata_2016(df, LPI_column_name, h1_column_name):
 
     return df
 
-def LD (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name):
+def LD (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name, GWT_column_name):
 
     LD = 0
+    # Initialize variables
+    zb = None
+    za = None
+    GWT = df.loc[0,GWT_column_name]
+
     for i, row in df.iterrows():
         Ic = row[Ic_column_name]
         depth = row[depth_column_name]
         FS = row[FS_column_name]
-        sig_v = row[vert_effective_stress_column_name]
-        kcs = 1*10**-4 #From Robertson and Cabal 2015 Table 6
-        kv = 0
-        ru = 0
-        h_exc =0
-        h_A = depth
-        gamma_water = 9.81 #kN/m^3
-        if 1 < Ic <= 3.27:
-            kv = 10**(.952-3.04*Ic)
-        elif 3.27 < Ic < 4:
-            kv = 10**(-4.52-1.37*Ic)
 
-        if 1 <= FS <= 3:
-            ru = .5 + np.arcsin(2 * FS**-5 -1)/np.pi()
-        h_exc = ru * sig_v / gamma_water
-
-        last_liq_depth = None
-        start_liq_depth = None
-        zb_thickness = 0
-        za_thickness = df.iloc[-1][depth_column_name]
-
-    # Iterate through the DataFrame
-    # for i, row in df.iterrows():
-        if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.25) and Ic < 2.6:
-            last_liq_depth = depth
-            if start_liq_depth is None:
+        if Ic < 2.6 and depth >= GWT and (zb is None or depth - zb <= 0.25):
+            zb = depth
+            if za is None:
                 if i == 0:
-                    start_liq_depth = df.loc[i][depth_column_name]
+                    za = depth
                     za_index = 0
                 else:
                     za_index = i - 1
-                    start_liq_depth = df.loc[i - 1][depth_column_name]
+                    za = df.loc[i-1][depth_column_name]
         else:
-            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.25 < depth - last_liq_depth:
-                last_liq_depth = None
-                start_liq_depth = None
-            elif last_liq_depth is not None and depth - last_liq_depth > 0.25:
-                zb_thickness = last_liq_depth - start_liq_depth
-                za_thickness = df.loc[za_index][depth_column_name]
-                za_depth = df.loc[za_index][depth_column_name]
-                zb_depth = za_depth + zb_thickness
+            if zb is not None and zb - za < 0.25 < depth - zb:
+                zb = None
+                za = None
+            elif zb is not None and depth - zb > 0.25:
+                za = df.loc[za_index][depth_column_name]
                 break
-        # if zb_depth > 15:
-        #     zb_depth = 15
 
+        if depth > 15:
+            zb = 15
+            if za is None:
+                za = 15
+            break
 
+    # def LD_integration (z):
+    #     kcs = 10 ** (.952 - 3.04 * 1.8)
+    #     kv = 0
+    #     ru = 1
+    #     h_A = z
+    #     gamma_water = 9.81  # kN/m^3
+    #
+    #     if 1 < row[Ic_column_name] <= 3.27:
+    #         kv = 10 ** (.952 - 3.04 * Ic)
+    #     elif 3.27 < row[Ic_column_name] < 4: #From Robertson and Cabal 2015 (Gregg CPT guide 6th edition pg 52)
+    #         kv = 10 ** (-4.52 - 1.37 * Ic)
+    #
+    #     if FS > 3 or FS == float('NaN') or FS == '':
+    #         ru = 0
+    #     elif 1 <= FS <= 3:
+    #         ru = .5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
+    #     h_exc = ru * row[vert_effective_stress_column_name] / gamma_water
+    #     return kv / kcs * (h_exc - h_A) * gamma_water
 
+    for i, row in df.iterrows():
+        depth = row[depth_column_name]
+        Ic = row[Ic_column_name]
+        if za < depth <= zb:
+            depth_before = df.loc[i-1, depth_column_name]
+            kcs = 10 ** (.952 - 3.04 * 1.8)
+            kv = 0
+            ru = 1
+            h_A = depth
+            gamma_water = 9.81  # kN/m^3
+
+            if 1 < Ic <= 3.27:
+                kv = 10 ** (0.952 - 3.04 * Ic)
+            elif 3.27 < Ic < 4:  # From Robertson and Cabal 2015 (Gregg CPT guide 6th edition pg 52)
+                kv = 10 ** (-4.52 - 1.37 * Ic)
+
+            if FS > 3 or FS == float('NaN') or FS == '':
+                ru = 0
+            elif 1 <= FS <= 3:
+                ru = .5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
+            h_exc = ru * row[vert_effective_stress_column_name] / gamma_water
+
+            LD += (kv / kcs * (h_exc - h_A) * gamma_water * depth) - (kv / kcs * (h_exc - h_A) * gamma_water * depth_before)
+        elif depth > zb:
+            break
+
+    df.at[0,'LD'] = LD
     return df
 
 
