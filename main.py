@@ -11,7 +11,7 @@ nan_preforo = []
 missing_date = []
 GWT_or_preforo_wrong_type = []
 GWT_zero_nan = []
-GWT_zero_confirmed = ["038022P239CPTU245",'038016P302CPTU302', '038003P980CPTU1080']
+LD_not_working = []
 
 ################ USER INPUTS ############################
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
@@ -92,15 +92,16 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = LSN(df, depth_column_name, "qc1ncs", "FS", GWT)
 
-    df = LD(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", 'GWT [m]' )
-
+    df = LD_and_CR(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
+    if df.loc[0]['LD_and_CR_result'] == 'Something went wrong':
+        LD_not_working.append(site)
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
              "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
              'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'rd', "CSR",
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
-             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD',
+             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
              f'towhata_basic_results', f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results',
              f'LPIish_cumulative_results', f'LPI_results']]
@@ -114,6 +115,7 @@ nan_preforo_df = pd.DataFrame({'nan preforo' : nan_preforo})
 missing_date_df = pd.DataFrame({'Missing Date':missing_date})
 weird_GWT_preforo_df = pd.DataFrame({'GWT or preforo wrong type':GWT_or_preforo_wrong_type})
 GWT_zero_nan_df = pd.DataFrame({'GWT zero or missing':GWT_zero_nan})
-sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df,weird_GWT_preforo_df], axis=1)
+wrong_LD_df = pd.DataFrame({'LD is wrong': LD_not_working})
+sites_to_check = pd.concat([pga_df, preforo_df,nan_preforo_df, missing_date_df,weird_GWT_preforo_df, wrong_LD_df], axis=1)
 export_folder_path_check_df = os.path.join(export_folder_path,'sites_to_check.xlsx')
 sites_to_check.to_excel(export_folder_path_check_df, index=False)

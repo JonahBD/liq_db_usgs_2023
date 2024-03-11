@@ -80,8 +80,10 @@ def soil_parameters(df, site):
                 df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
                     float) # TODO: maybe change this back to qt depending on which method we want to use
     else:
+
+        GWT_zero_confirmed = ["038022P239CPTU245", '038016P302CPTU302', '038003P980CPTU1080']
         if site not in GWT_zero_confirmed:
-            warnings.warn('GWT marked as 0 or not provided')
+            warnings.warn(f'{site} GWT marked as 0 or not provided')
 
     # Qt calculation
     df['Qt'] = [(x - y) / z for x, y, z in zip(df["qt calc"], df["Total Stress (kPa)"], df['Effective Stress (kPa)'])]
@@ -380,8 +382,8 @@ def soil_parameters(df, site):
     # //////////////////////////////////////// end NON-COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     # Delete columns that stored variables for calculations but that we don't want in the final spreadsheet
-    df.drop(['qc calc', 'qt calc', 'Qt', 'n1', 'Cn', 'Qtn', 'n2', 'error', 'qc1', 'qc2', 'error2', 'Cn2', 'Qtn,cs'],
-            axis=1, inplace=True)
+    df.drop(['qc calc', 'Qt', 'n1', 'Cn', 'n2', 'error', 'qc1', 'qc2', 'error2', 'Cn2', 'Qtn,cs'],
+            axis=1, inplace=True) #, 'Qtn' #NOTE: Took QTN out for Cr function to use
     return df
 
 
@@ -822,9 +824,10 @@ def Towhata_2016(df, LPI_column_name, h1_column_name):
 
     return df
 
-def LD (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name, GWT_column_name):
+def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name,total_stress_column_name, GWT_column_name, Qtn_column_name, Fr_column_name, qt_colum_name):
 
     LD = 0
+    CR = 0
     # Initialize variables
     zb = None
     za = None
@@ -852,58 +855,87 @@ def LD (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_st
                 za = df.loc[za_index][depth_column_name]
                 break
 
-        if depth > 15:
-            zb = 15
-            if za is None:
+        if depth > 15 or za is None:
+            if za is None or za == 15:
                 za = 15
+                zb = 15
             break
 
-    # def LD_integration (z):
-    #     kcs = 10 ** (.952 - 3.04 * 1.8)
-    #     kv = 0
-    #     ru = 1
-    #     h_A = z
-    #     gamma_water = 9.81  # kN/m^3
-    #
-    #     if 1 < row[Ic_column_name] <= 3.27:
-    #         kv = 10 ** (.952 - 3.04 * Ic)
-    #     elif 3.27 < row[Ic_column_name] < 4: #From Robertson and Cabal 2015 (Gregg CPT guide 6th edition pg 52)
-    #         kv = 10 ** (-4.52 - 1.37 * Ic)
-    #
-    #     if FS > 3 or FS == float('NaN') or FS == '':
-    #         ru = 0
-    #     elif 1 <= FS <= 3:
-    #         ru = .5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
-    #     h_exc = ru * row[vert_effective_stress_column_name] / gamma_water
-    #     return kv / kcs * (h_exc - h_A) * gamma_water
-
+    kcs = 10 ** (.952 - 3.04 * 1.8)
+    ru = 1
+    gamma_water = 9.81 # kN/m^3
     for i, row in df.iterrows():
         depth = row[depth_column_name]
         Ic = row[Ic_column_name]
+        # Cr parameter
+        if depth <= za:
+            Qtn = row[Qtn_column_name]
+            Fr = row[Fr_column_name]
+            Nkt = 15
+            qt = row[qt_colum_name]
+            eff_stress = row[vert_effective_stress_column_name]
+            total_stress = row[total_stress_column_name]
+            K0 = .5
+            phi_cs = 33
+
+            IB = 100 * (Qtn + 10) / (Qtn * Fr + 70)
+
+            if IB <= 22:
+                su = (qt - total_stress) / Nkt
+            else:
+                su = K0 * eff_stress * np.tan(phi_cs * np.pi / 180)
+
+            if i == 0:
+                CR += su * df.loc[i + 1, depth_column_name] - su * depth
+            else:
+                depth_before = df.loc[i - 1, depth_column_name]
+                CR += su * depth - su * depth_before
+
+        # Ld parameter
         if za < depth <= zb:
             depth_before = df.loc[i-1, depth_column_name]
-            kcs = 10 ** (.952 - 3.04 * 1.8)
-            kv = 0
-            ru = 1
             h_A = depth
-            gamma_water = 9.81  # kN/m^3
+
+            if Ic < 1:
+                kv = 1
+                print("this site has an Ic value less than 1 at " + depth)
+            elif Ic > 4:
+                kv = 1*10**-10
+                print("this site has an Ic value greater than 4 at " + depth)
 
             if 1 < Ic <= 3.27:
                 kv = 10 ** (0.952 - 3.04 * Ic)
             elif 3.27 < Ic < 4:  # From Robertson and Cabal 2015 (Gregg CPT guide 6th edition pg 52)
                 kv = 10 ** (-4.52 - 1.37 * Ic)
 
-            if FS > 3 or FS == float('NaN') or FS == '':
+            if FS > 3 or FS == float('NaN') or FS == '' or FS == 9999:
                 ru = 0
-            elif 1 <= FS <= 3:
+            elif 1 <= FS < 3:
                 ru = .5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
             h_exc = ru * row[vert_effective_stress_column_name] / gamma_water
 
-            LD += (kv / kcs * (h_exc - h_A) * gamma_water * depth) - (kv / kcs * (h_exc - h_A) * gamma_water * depth_before)
+            if h_exc >= h_A:
+                LD += (kv / kcs * (h_exc - h_A) * gamma_water) * (depth - depth_before)
         elif depth > zb:
             break
 
     df.at[0,'LD'] = LD
+    df.at[0, 'CR'] = CR
+
+    #LD and CR results
+    result = 'Something went wrong'
+    if CR < 100 and LD < 2.5 or (100 < CR < 250 and LD < 0.15 * (CR-100) + 2.5) or LD == 0 or CR == 0:
+        result = 'None'
+    elif CR < 90 and LD < 6 or ( 90 < CR < 250 and LD < 2/5 * (CR - 90) + 6):
+        result = 'Minor'
+    elif CR < 85 and LD <15 or (85 < CR < 250 and LD < 9/11 * (CR - 85) + 15):
+        result = 'Moderate'
+    elif CR < 75 and LD < 85 or (75 < CR < 250 and LD < 33/25 * (CR - 75) + 85):
+        result = 'Severe'
+    elif CR < 75 and LD > 85 or (75 < CR < 250 and LD > 33/25 * (CR - 75) + 85):
+        result = 'Extreme'
+    df.at[0, 'LD_and_CR_result'] = result
+
     return df
 
 
