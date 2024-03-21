@@ -3,8 +3,8 @@ import glob, os
 from tqdm import tqdm
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters"
-export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters\liq param sheet"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters 3-18"
+export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 #########################################################
 
 sites = []
@@ -43,6 +43,15 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     liq_df.at[indx_counter, 'LSN'] = df.loc[0]['LSN']
 
+    liq_df.at[indx_counter, 'LD'] = df.loc[0]['LD']
+
+    liq_df.at[indx_counter, 'CR'] = df.loc[0]['CR']
+
+    if (df.loc[0]['zb'] - df.loc[0]['za']) >= 0.75 * df.loc[0]['h2_cumulative']:
+        liq_df.at[indx_counter, 'stratified'] = 0
+    else:
+        liq_df.at[indx_counter, 'stratified'] = 1
+
     #Results section
     liq_df.at[indx_counter, f'LPI_results'] = df.loc[0][f'LPI_results']
 
@@ -58,10 +67,14 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     liq_df.at[indx_counter, 'LSN' + "_results"] = df.loc[0]['LSN' + "_results"]
 
+    liq_df.at[indx_counter, 'LD_and_CR_result'] = df.loc[0]['LD_and_CR_result']
+
+    liq_df.at[indx_counter, 'LD_and_CR_binary_result'] = df.loc[0]['LD_and_CR_binary_result']
+
     liq_df.at[indx_counter, 'Liquefaction'] = df.loc[0]['Liquefaction']
 
     indx_counter += 1
     loop.update(1)
 loop.close()
 
-liq_df.to_excel(f'{export_folder_path}\liq_param_compiled.xlsx', index=False)
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled 03 19.xlsx', index=False)

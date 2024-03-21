@@ -1,8 +1,8 @@
 import pandas as pd
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters\liq param sheet\liq_results_all_tests.xlsx"
-export_file_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Gabrelle update\Only one eq soil parameters\liq param sheet"
+input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\liq_param_compiled 03 19.xlsx"
+export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update"
 #########################################################
 
 df = pd.read_excel(input_file_path)
@@ -29,4 +29,4 @@ for column in df.columns:
         df.at[i, "value"] = df[str(column)].sum()
         i += 1
 
-df.to_excel(f'{export_file_path}\liq_methods_performance.xlsx', index=False)
+df.to_excel(f'{export_file_path}\liq_methods_performance 03 19.xlsx', index=False)

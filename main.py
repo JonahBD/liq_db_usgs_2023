@@ -14,8 +14,8 @@ GWT_zero_nan = []
 LD_not_working = []
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters (no dates) 2-23"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
 vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
@@ -92,6 +92,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = LSN(df, depth_column_name, "qc1ncs", "FS", GWT)
 
+    df = ishihara_curves(df, 'basic')
+    df = ishihara_curves(df, 'cumulative')
+
     df = LD_and_CR(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
     if df.loc[0]['LD_and_CR_result'] == 'Something went wrong':
         LD_not_working.append(site)
@@ -101,10 +104,11 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              'OCR R', 'OCR K', 'cu_bq', 'cu_14', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'rd', "CSR",
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
-             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR',
+             f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
-             f'towhata_basic_results', f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results',
-             f'LPIish_cumulative_results', f'LPI_results']]
+             'ishihara_curve_basic_result','ishihara_curve_cumulative_result', f'towhata_basic_results',
+             f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results', f'LPIish_cumulative_results',
+             'LD_and_CR_result', 'LD_and_CR_binary_result', f'LPI_results']]
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)

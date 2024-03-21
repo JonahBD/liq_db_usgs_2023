@@ -23,6 +23,15 @@ def soil_parameters(df, site):
 
     # ///////////////////////////////////////////// GENERAL CALCULATIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     # "qc calc" and "qt calc" columns created to change bad data into numbers our equations can handle. Units are also converted
+
+    qc_og = df['qc (MPa)']
+    fs_og = df['fs (kPa)']
+    qt_og = df['qt (MPa)']
+
+    if df.loc[0]['Depth (m)'] < df.loc[0]['preforo [m]']:
+        df['qc (MPa)'] = [float('Nan') if x < df.loc[0]['preforo [m]'] else y for x, y in zip(df['Depth (m)'], df['qc (MPa)'])]
+        df['fs (kPa)'] = [float('Nan') if x < df.loc[0]['preforo [m]'] else y for x, y in zip(df['Depth (m)'], df['fs (kPa)'])]
+        df['qt (MPa)'] = [float('Nan') if x < df.loc[0]['preforo [m]'] else y for x, y in zip(df['Depth (m)'], df['qt (MPa)'])]
     df['qc calc'] = df['qc (MPa)'] * 1000
     df['qt calc'] = df['qt (MPa)'] * 1000
     for i in range(len(df.index)):
@@ -78,10 +87,10 @@ def soil_parameters(df, site):
                 df.at[i, 'Fr (%)'] = 0
             else:
                 df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
-                    float) # TODO: maybe change this back to qt depending on which method we want to use
+                    float)
     else:
 
-        GWT_zero_confirmed = ["038022P239CPTU245", '038016P302CPTU302', '038003P980CPTU1080']
+        GWT_zero_confirmed = ["038022P239CPTU245", '038016P302CPTU302', '038003P980CPTU1080', '036010P13CPTU13']
         if site not in GWT_zero_confirmed:
             warnings.warn(f'{site} GWT marked as 0 or not provided')
 
@@ -101,7 +110,7 @@ def soil_parameters(df, site):
         df['Cn'] = [1.7 if x >= 1.7 else x for x in df['Cn']]
 
         # Calculate Qtn
-        df['Qtn'] = (((df["qt calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float) # TODO: change qc calc back to qt calc
+        df['Qtn'] = (((df["qt calc"] - df['Total Stress (kPa)']) / Pa) * df['Cn']).astype(float)
 
         # Calculate Ic
         for i in range(len(df.index)):
@@ -160,7 +169,7 @@ def soil_parameters(df, site):
     while not counter:
         # Cn calculation
         df['m'] = (1.338 - 0.249 * (df['qc1'] / Pa) ** 0.264)
-        # df['m'] = [0.264 if x < 0.264 else x for x in df['m']] # NOTE: the cap on "m" is based on Robertson's method?
+        # df['m'] = [0.264 if x < 0.264 else x for x in df['m']] # NOTE: the cap on "m" is based on I&B 2014 method
         # df['m'] = [0.782 if x > 0.782 else x for x in df['m']]
         df['Cn2'] = (Pa / df['Effective Stress (kPa)']) ** df['m']
         df['Cn2'] = [1.7 if x >= 1.7 else x for x in df['Cn2']]
@@ -384,6 +393,9 @@ def soil_parameters(df, site):
     # Delete columns that stored variables for calculations but that we don't want in the final spreadsheet
     df.drop(['qc calc', 'Qt', 'n1', 'Cn', 'n2', 'error', 'qc1', 'qc2', 'error2', 'Cn2', 'Qtn,cs'],
             axis=1, inplace=True) #, 'Qtn' #NOTE: Took QTN out for Cr function to use
+    df['qc (MPa)'] = qc_og
+    df['fs (kPa)'] = fs_og
+    df['qt (MPa)'] = qt_og
     return df
 
 
@@ -395,7 +407,7 @@ def PGA_insertion(df, PGA_filepath, site):
         df.at[0,"EQ"] = "20_may"
         df.at[1,"EQ"] = 6.1
     else:
-        df.at[0, 'PGA'] = pga_df.loc[site]['PGA_29may'] # TODO: change this back to 29may when not comparing with cliq files
+        df.at[0, 'PGA'] = pga_df.loc[site]['PGA_29may'] # NOTE: change this back to 29may when not comparing with cliq files
         df.at[0, "EQ"] = "29_may"
         df.at[1, "EQ"] = 5.9
     # df.at[0, 'PGA_20may'] = pga_df.loc[site]['PGA_20may']
@@ -455,10 +467,13 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
             alpha = -1.012 - 1.126 * np.sin(
                 row['Depth (m)'] / 11.73 + 5.133)  # rd is only good for depths less than 20 meters (pg 68)
             beta = .106 + .118 * np.sin(row['Depth (m)'] / 11.28 + 5.142)
-            if row['Depth (m)'] <= 34: # TODO: change back to <20?
-                df.at[i, 'rd'] = np.exp(alpha + beta * magnitude)
+            if row['Depth (m)'] <= 34: # NOTE: I&B 2008 caps this at 20, Cliq caps at 34
+                rd = np.exp(alpha + beta * magnitude)
             else:
-                df.at[i, 'rd'] = 0.12 * np.exp(0.22 * magnitude)
+                rd = 0.12 * np.exp(0.22 * magnitude)
+            if rd > 1:
+                rd = 1
+            df.at[i, 'rd'] = rd
 
             row = df.loc[i]
 
@@ -491,6 +506,7 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
     # Initialize variables
     last_liq_depth = None
     start_liq_depth = None
+    thick_liq = 0
     h2_thickness = 0
     h1_thickness = df.iloc[-1][depth_column_name]
 
@@ -501,20 +517,30 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
         if FS == '':
             FS = float('NaN')
 
+        if FS < 1 and start_liq_depth is not None:
+            if thick_liq == 0:
+                if 0 <= index < 2:
+                    thick_liq += df.loc[index + 2][depth_column_name] - depth
+                else:
+                    thick_liq += depth - df.loc[index - 2][depth_column_name]
+            else:
+                thick_liq += depth - df.loc[index - 1][depth_column_name]
+
         if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
             last_liq_depth = depth
             if start_liq_depth is None:
                 if index == 0:
-                    start_liq_depth = df.loc[index][depth_column_name]
+                    start_liq_depth = depth
                     h1_index = 0
                 else:
                     h1_index = index - 1
                     start_liq_depth = df.loc[index - 1][depth_column_name]
         else:
-            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
+            if last_liq_depth is not None and thick_liq < 0.3 and depth - last_liq_depth < 0.15:
                 last_liq_depth = None
                 start_liq_depth = None
-            elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
+                thick_liq = 0
+            elif last_liq_depth is not None and thick_liq > 0.3:
                 h2_thickness = last_liq_depth - start_liq_depth
                 h1_thickness = df.loc[h1_index][depth_column_name]
                 break
@@ -523,6 +549,14 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
     h2_columnn_name = "h2_basic"
     df.at[0, h1_column_name] = h1_thickness
     df.at[0, h2_columnn_name] = h2_thickness
+
+    # This commented code will apply a cap of 10m to h1 and h2
+    # if h1_thickness > 10:
+    #     h1_thickness = 10
+    # df.at[0, h1_column_name] = h1_thickness
+    # if h1_thickness + h2_thickness >= 10:
+    #     h2_thickness = 10 - h1_thickness
+    # df.at[0, h2_columnn_name] = h2_thickness
 
     return df
 
@@ -547,12 +581,12 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
             if start_liq_depth is None:
                 if index == 0:
                     h1_index = 0
-                    start_liq_depth = df.loc[index, depth_column_name]
+                    start_liq_depth = depth
                 else:
                     h1_index = index - 1
                     start_liq_depth = df.loc[index - 1][depth_column_name]
         else:
-            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 < depth - last_liq_depth:
+            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 and depth - last_liq_depth < 0.15:
                 last_liq_depth = None
                 start_liq_depth = None
             elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
@@ -636,15 +670,10 @@ def LPIish(df, depth_column_name, FS_column_name, h1_column_name):
     for i, row in df.iterrows():
         h1 = df.loc[0][h1_column_name]
         depth = row[depth_column_name]
-        if h1 <= depth <= 20:
+        if h1 < depth <= 20:
             if depth < 0.4:
                 continue
-            if i == 0:
-                thick = df.loc[i + 1][depth_column_name] - depth
-                start_depth = depth - thick
-                LPIish += integrate.quad(Integrate_LPIish, start_depth, depth)[0]
-            else:
-                LPIish += integrate.quad(Integrate_LPIish, df.loc[i - 1][depth_column_name], depth)[0]
+            LPIish += integrate.quad(Integrate_LPIish, df.loc[i - 1][depth_column_name], depth)[0]
 
     #LPIish found on page 782 of maurer 2015 paper
     if LPIish >= 5:
@@ -824,58 +853,88 @@ def Towhata_2016(df, LPI_column_name, h1_column_name):
 
     return df
 
-def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name,total_stress_column_name, GWT_column_name, Qtn_column_name, Fr_column_name, qt_colum_name):
+def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name,total_stress_column_name, GWT_column_name, Qtn_column_name, Fr_column_name, qt_column_name):
 
     LD = 0
     CR = 0
     # Initialize variables
-    zb = None
+    za_check = None
+    za_temp = None
     za = None
-    GWT = df.loc[0,GWT_column_name]
+    zb_check = None
+    zb_temp = None
+    zb = None
+    counter = 0
+    GWT = df.loc[0, GWT_column_name]
 
     for i, row in df.iterrows():
         Ic = row[Ic_column_name]
         depth = row[depth_column_name]
-        FS = row[FS_column_name]
 
-        if Ic < 2.6 and depth >= GWT and (zb is None or depth - zb <= 0.25):
-            zb = depth
-            if za is None:
-                if i == 0:
-                    za = depth
-                    za_index = 0
-                else:
-                    za_index = i - 1
-                    za = df.loc[i-1][depth_column_name]
-        else:
-            if zb is not None and zb - za < 0.25 < depth - zb:
-                zb = None
-                za = None
-            elif zb is not None and depth - zb > 0.25:
-                za = df.loc[za_index][depth_column_name]
-                break
+        if za is None:
+            if Ic < 2.6 and depth >= GWT and za_check is None:
+                za_check = depth
+                if za_temp is None:
+                    if i == 0:
+                        za_temp = depth
+                        za_index = 0
+                    else:
+                        za_index = i - 1
+                        za_temp = df.loc[i-1][depth_column_name]
+            else:
+                if za_check is not None and Ic < 2.6:
+                    za_check = depth
+                elif za_check is not None and Ic >= 2.6 and za_check - za_temp < 0.25:
+                    za_check = None
+                    za_temp = None
+                elif za_check is not None and za_check - za_temp >= 0.25:
+                    za = df.loc[za_index][depth_column_name]
 
-        if depth > 15 or za is None:
-            if za is None or za == 15:
-                za = 15
-                zb = 15
-            break
+        if za is not None:
+            if counter == 0:
+                zb_temp = df.loc[i-1][depth_column_name]
+                zb_check = df.loc[i-1][depth_column_name]
+                counter += 1
+
+            if Ic >= 2.6 and zb_temp is not None:
+                zb_check = depth
+            elif Ic >= 2.6 and zb_temp is None:
+                zb_check = depth
+                zb_temp = depth
+            elif Ic < 2.6 and zb_check is not None:
+                if zb_check - zb_temp < 0.25:
+                    zb_check = None
+                    zb_temp = None
+                elif zb_check - zb_temp >= 0.25:
+                    zb = zb_temp
+                    break
+
+    if za_temp is not None and counter == 0:
+        za = za_temp
+        zb = 15
+    elif za is None or za > 15:
+        za = 15
+        zb = 15
+    elif zb_temp is not None:
+        zb = zb_temp
+    elif zb is None or zb > 15:
+        zb = 15
 
     kcs = 10 ** (.952 - 3.04 * 1.8)
-    ru = 1
     gamma_water = 9.81 # kN/m^3
     for i, row in df.iterrows():
         depth = row[depth_column_name]
         Ic = row[Ic_column_name]
+        FS = row[FS_column_name]
         # Cr parameter
         if depth <= za:
             Qtn = row[Qtn_column_name]
             Fr = row[Fr_column_name]
             Nkt = 15
-            qt = row[qt_colum_name]
+            qt = row[qt_column_name]
             eff_stress = row[vert_effective_stress_column_name]
             total_stress = row[total_stress_column_name]
-            K0 = .5
+            K0 = 0.5
             phi_cs = 33
 
             IB = 100 * (Qtn + 10) / (Qtn * Fr + 70)
@@ -886,22 +945,23 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
                 su = K0 * eff_stress * np.tan(phi_cs * np.pi / 180)
 
             if i == 0:
-                CR += su * df.loc[i + 1, depth_column_name] - su * depth
+                CR += su * (df.loc[i + 1, depth_column_name] - depth)
             else:
                 depth_before = df.loc[i - 1, depth_column_name]
-                CR += su * depth - su * depth_before
+                CR += su * (depth - depth_before)
 
         # Ld parameter
         if za < depth <= zb:
+            ru = 1
             depth_before = df.loc[i-1, depth_column_name]
             h_A = depth
 
             if Ic < 1:
                 kv = 1
-                print("this site has an Ic value less than 1 at " + depth)
+                print("this site has an Ic value less than 1 at " + str(depth))
             elif Ic > 4:
                 kv = 1*10**-10
-                print("this site has an Ic value greater than 4 at " + depth)
+                print("this site has an Ic value greater than 4 at " + str(depth))
 
             if 1 < Ic <= 3.27:
                 kv = 10 ** (0.952 - 3.04 * Ic)
@@ -911,7 +971,7 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
             if FS > 3 or FS == float('NaN') or FS == '' or FS == 9999:
                 ru = 0
             elif 1 <= FS < 3:
-                ru = .5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
+                ru = 0.5 + np.arcsin(2 * FS ** -5 - 1) / np.pi
             h_exc = ru * row[vert_effective_stress_column_name] / gamma_water
 
             if h_exc >= h_A:
@@ -921,20 +981,41 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
 
     df.at[0,'LD'] = LD
     df.at[0, 'CR'] = CR
+    df.at[0, 'za'] = za
+    df.at[0, 'zb'] = zb
 
     #LD and CR results
     result = 'Something went wrong'
-    if CR < 100 and LD < 2.5 or (100 < CR < 250 and LD < 0.15 * (CR-100) + 2.5) or LD == 0 or CR == 0:
-        result = 'None'
-    elif CR < 90 and LD < 6 or ( 90 < CR < 250 and LD < 2/5 * (CR - 90) + 6):
+    if CR < 100 and LD < 2.5 or (100 < CR and LD < 0.15 * (CR-100) + 2.5) or LD == 0:
+        result = 'No Liquefaction'
+    elif CR < 90 and LD < 6 or (90 < CR and LD < 2/5 * (CR - 90) + 6):
         result = 'Minor'
-    elif CR < 85 and LD <15 or (85 < CR < 250 and LD < 9/11 * (CR - 85) + 15):
+    elif CR < 85 and LD < 15 or (85 < CR and LD < 9/11 * (CR - 85) + 15):
         result = 'Moderate'
-    elif CR < 75 and LD < 85 or (75 < CR < 250 and LD < 33/25 * (CR - 75) + 85):
+    elif CR < 75 and LD < 85 or (75 < CR and LD < 33/25 * (CR - 75) + 85):
         result = 'Severe'
-    elif CR < 75 and LD > 85 or (75 < CR < 250 and LD > 33/25 * (CR - 75) + 85):
+    elif CR < 75 and LD > 85 or (75 < CR and LD > 33/25 * (CR - 75) + 85):
         result = 'Extreme'
     df.at[0, 'LD_and_CR_result'] = result
+
+    if result == 'No Liquefaction':
+        df.at[0, 'LD_and_CR_binary_result'] = 0
+    else:
+        df.at[0,'LD_and_CR_binary_result'] = 1
+
+    return df
+
+def ishihara_curves(df, method): # Maurer's power law equations from 2022 AI paper
+    PGA = df.loc[0]['PGA']
+    h1 = df.loc[0][f"h1_{method}"]
+    h2 = df.loc[0][f"h2_{method}"]
+
+    h2_ish = 0.0217 * PGA**-1.9481 * h1**1.5688
+
+    if h2 >= h2_ish:
+        df.at[0,f'ishihara_curve_{method}_result'] = 1
+    else:
+        df.at[0, f'ishihara_curve_{method}_result'] = 0
 
     return df
 
