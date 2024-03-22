@@ -803,7 +803,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         binary = 0
     elif LSN < 40:
         result = "Moderate to severe manifestation of liquefaction is expected"
-        binary = 0.5
+        binary = 1
     elif LSN >= 40:
         result = "Major manifestation of liquefaction expected"
         binary = 1
@@ -839,7 +839,7 @@ def Towhata_2016(df, LPI_column_name, h1_column_name):
         binary = 0
     elif qualification == "B1" or qualification == "B2" or qualification == "B3":
         result = "Low probability"
-        binary = 0.5
+        binary = 1
     elif qualification == "C":
         result = "High probability"
         binary = 1
@@ -996,12 +996,12 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
         result = 'Severe'
     elif CR < 75 and LD > 85 or (75 < CR and LD > 33/25 * (CR - 75) + 85):
         result = 'Extreme'
-    df.at[0, 'LD_and_CR_result'] = result
+    df.at[0, 'LD_and_CR_results'] = result
 
     if result == 'No Liquefaction':
-        df.at[0, 'LD_and_CR_binary_result'] = 0
+        df.at[0, 'LD_and_CR_binary_results'] = 0
     else:
-        df.at[0,'LD_and_CR_binary_result'] = 1
+        df.at[0,'LD_and_CR_binary_results'] = 1
 
     return df
 
@@ -1013,9 +1013,9 @@ def ishihara_curves(df, method): # Maurer's power law equations from 2022 AI pap
     h2_ish = 0.0217 * PGA**-1.9481 * h1**1.5688
 
     if h2 >= h2_ish:
-        df.at[0,f'ishihara_curve_{method}_result'] = 1
+        df.at[0,f'ishihara_curve_{method}_results'] = 1
     else:
-        df.at[0, f'ishihara_curve_{method}_result'] = 0
+        df.at[0, f'ishihara_curve_{method}_results'] = 0
 
     return df
 

@@ -96,7 +96,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     df = ishihara_curves(df, 'cumulative')
 
     df = LD_and_CR(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
-    if df.loc[0]['LD_and_CR_result'] == 'Something went wrong':
+    if df.loc[0]['LD_and_CR_results'] == 'Something went wrong':
         LD_not_working.append(site)
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
@@ -106,9 +106,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
-             'ishihara_curve_basic_result','ishihara_curve_cumulative_result', f'towhata_basic_results',
+             'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
              f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results', f'LPIish_cumulative_results',
-             'LD_and_CR_result', 'LD_and_CR_binary_result', f'LPI_results']]
+             'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results']]
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)

@@ -29,4 +29,4 @@ for column in df.columns:
         df.at[i, "value"] = df[str(column)].sum()
         i += 1
 
-df.to_excel(f'{export_file_path}\liq_methods_performance 03 19.xlsx', index=False)
+df.to_excel(f'{export_file_path}\liq_methods_performance 03 22.xlsx', index=False)

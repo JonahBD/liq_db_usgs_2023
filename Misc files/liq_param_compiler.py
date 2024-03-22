@@ -67,9 +67,13 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     liq_df.at[indx_counter, 'LSN' + "_results"] = df.loc[0]['LSN' + "_results"]
 
-    liq_df.at[indx_counter, 'LD_and_CR_result'] = df.loc[0]['LD_and_CR_result']
+    liq_df.at[indx_counter, 'LD_and_CR_results'] = df.loc[0]['LD_and_CR_results']
 
-    liq_df.at[indx_counter, 'LD_and_CR_binary_result'] = df.loc[0]['LD_and_CR_binary_result']
+    liq_df.at[indx_counter, 'LD_and_CR_binary_results'] = df.loc[0]['LD_and_CR_binary_results']
+
+    liq_df.at[indx_counter, 'ishihara_curve_basic_results'] = df.loc[0]['ishihara_curve_basic_results']
+
+    liq_df.at[indx_counter, 'ishihara_curve_cumulative_results'] = df.loc[0]['ishihara_curve_cumulative_results']
 
     liq_df.at[indx_counter, 'Liquefaction'] = df.loc[0]['Liquefaction']
 
@@ -77,4 +81,4 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     loop.update(1)
 loop.close()
 
-liq_df.to_excel(f'{export_folder_path}\liq_param_compiled 03 19.xlsx', index=False)
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled 03 22.xlsx', index=False)
