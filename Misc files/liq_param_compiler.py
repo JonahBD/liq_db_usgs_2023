@@ -47,6 +47,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     liq_df.at[indx_counter, 'CR'] = df.loc[0]['CR']
 
+    liq_df.at[indx_counter, f'Clay_profile'] = df.loc[0][f'Clay_profile']
+
     if (df.loc[0]['zb'] - df.loc[0]['za']) >= 0.75 * df.loc[0]['h2_cumulative']:
         liq_df.at[indx_counter, 'stratified'] = 0
     else:

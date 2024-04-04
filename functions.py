@@ -249,6 +249,17 @@ def soil_parameters(df, site):
             df.at[i, 'cu_bq'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             df.at[i, 'cu_14'] = (row['qt calc'] - row[
                 'Total Stress (kPa)']) / 14  # Dr. Rollins wanted to use a set value of Nkt = 14 in addition to the bq calc since he is unfamiliar with bq
+
+            #from Hutabarat and Bray 2022 method to calculate CR and LD
+            df.at[i,'IB'] = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
+
+            Nkt = 15
+            K0 = 0.5
+            phi_cs = 33
+            if row['IB'] <= 22:
+                df.at[i, 'su_HB'] = (row['qt_calc'] - row['Total Stress (kPa)']) / Nkt
+            else:
+                df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # -------------------------- end cu calculations -----------------------------------------------------------
 
             # ----------------------------- M calculations -------------------------------------------------------------
@@ -385,6 +396,18 @@ def soil_parameters(df, site):
                 am = 0.0188 * (10 ** (0.55 * row['Ic'] + 1.68))
                 df.at[i, 'M'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
             # ------------------------------------- end M --------------------------------------------------------------
+
+            # ------------------------------------- su -----------------------------------------------------------------
+            # from Hutabarat and Bray 2022 method to calculate CR and LD
+            df.at[i, 'IB'] = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
+            Nkt = 15
+            K0 = 0.5
+            phi_cs = 33
+            if row['IB'] <= 22:
+                df.at[i, 'su_HB'] = (row['qt_calc'] - row['Total Stress (kPa)']) / Nkt
+            else:
+                df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+            # ------------------------------------- end su -------------------------------------------------------------
         elif row['Ic'] == 0:
             df.at[i, 'Ic'] = float('NaN')
 
@@ -550,6 +573,11 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
     df.at[0, h1_column_name] = h1_thickness
     df.at[0, h2_columnn_name] = h2_thickness
 
+    if h2_thickness >= .3:
+        df.at[0, 'Clay_profile'] = 0
+    else:
+        df.at[0, 'Clay_profile'] = 1
+
     # This commented code will apply a cap of 10m to h1 and h2
     # if h1_thickness > 10:
     #     h1_thickness = 10
@@ -656,6 +684,10 @@ def LPI(df, depth_column_name, FS_column_name):
 
 
 def LPIish(df, depth_column_name, FS_column_name, h1_column_name):
+    """This is LPIISH as discussed in Maurer 2015, 'Moving towards an improved index for assessing liquefaction
+    hazard: Lessons from historical data.' The inputs are your df, and column names, and it outputs the lpiish value
+    into your df as well as a binary result for liquefaction, or the descriptive results found in the paper. You will have to
+    change manually what results you want by altering the code from 'binary' to 'result.'"""
     def Integrate_LPIish(z):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="overflow encountered in exp")
@@ -854,7 +886,9 @@ def Towhata_2016(df, LPI_column_name, h1_column_name):
     return df
 
 def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effective_stress_column_name,total_stress_column_name, GWT_column_name, Qtn_column_name, Fr_column_name, qt_column_name):
-
+    """This function computes the 'CPT-based liquefaction ejecta evaluation procedure' outlined by Bray and Hutabarat
+    in their 2022 paper titled as such. The input is your df with specific column names, and it then adds LD,CR,za,zb,and su
+    to your df"""
     LD = 0
     CR = 0
     # Initialize variables
@@ -938,7 +972,6 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
             phi_cs = 33
 
             IB = 100 * (Qtn + 10) / (Qtn * Fr + 70)
-
             if IB <= 22:
                 su = (qt - total_stress) / Nkt
             else:
@@ -957,11 +990,13 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
             h_A = depth
 
             if Ic < 1:
-                kv = 1
+                # kv = .0081658
                 print("this site has an Ic value less than 1 at " + str(depth))
+                continue
             elif Ic > 4:
-                kv = 1*10**-10
+                # kv = 1*10**-10
                 print("this site has an Ic value greater than 4 at " + str(depth))
+                continue
 
             if 1 < Ic <= 3.27:
                 kv = 10 ** (0.952 - 3.04 * Ic)
@@ -976,8 +1011,6 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
 
             if h_exc >= h_A:
                 LD += (kv / kcs * (h_exc - h_A) * gamma_water) * (depth - depth_before)
-        elif depth > zb:
-            break
 
     df.at[0,'LD'] = LD
     df.at[0, 'CR'] = CR
@@ -1005,7 +1038,11 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
 
     return df
 
-def ishihara_curves(df, method): # Maurer's power law equations from 2022 AI paper
+def ishihara_curves(df, method):
+    """While these are not the original ishihara curves, they come from the updated Maurer's power law equations from
+    his 2022 paper titled 'Evaluation and updating of Ishihara’s (1985) model for liquefaction surface expression, with insights from
+    machine and deep learning.' The method you input is either basic or cumulative as outlined in his paper. This will just label your
+    output in the df as such method."""
     PGA = df.loc[0]['PGA']
     h1 = df.loc[0][f"h1_{method}"]
     h2 = df.loc[0][f"h2_{method}"]
