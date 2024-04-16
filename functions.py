@@ -89,7 +89,23 @@ def soil_parameters(df, site):
                 df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
                     float)
     else:
+        GWT = df.loc[0]['GWT [m]']
+        df['Effective Stress (kPa)'] = df['Total Stress (kPa)']
 
+        df['u calc'] = 0
+
+        for i in range(len(df.index)):
+            row = df.loc[i]
+            if row['Depth (m)'] >= GWT:
+                df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
+                df.at[i, 'u calc'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
+                # print(type(row["u (kPa)"]), type(row["u (kPa)"]))
+            # Fr calcuation
+            if row['fs (kPa)'] <= 0:
+                df.at[i, 'Fr (%)'] = 0
+            else:
+                df.at[i, 'Fr (%)'] = (row["fs (kPa)"] / (row["qt calc"] - row['Total Stress (kPa)']) * 100).astype(
+                    float)
         GWT_zero_confirmed = ["038022P239CPTU245", '038016P302CPTU302', '038003P980CPTU1080', '036010P13CPTU13']
         if site not in GWT_zero_confirmed:
             warnings.warn(f'{site} GWT marked as 0 or not provided')
@@ -190,13 +206,13 @@ def soil_parameters(df, site):
         it_counter += 1
 
         # Check to see if every row meets our error tolerance. If not, repeat the process.
-        # If there have been more than 100 iterations, set the value to "No Solution"
+        # If there have been more than 100 iterations, set the value to Nan
         counter1 = True
         for i in range(len(df.index)):
             row = df.loc[i]
             if it_counter == 100:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
-                    df.at[i, 'Dr I'] = str('No Solution')
+                    df.at[i, 'Dr I'] = float('Nan')
             else:
                 if row['Dr I'] > 0 and row['error2'] > tolerance:
                     counter1 = False
@@ -251,13 +267,13 @@ def soil_parameters(df, site):
                 'Total Stress (kPa)']) / 14  # Dr. Rollins wanted to use a set value of Nkt = 14 in addition to the bq calc since he is unfamiliar with bq
 
             #from Hutabarat and Bray 2022 method to calculate CR and LD
-            df.at[i,'IB'] = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
+            IB = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
 
             Nkt = 15
             K0 = 0.5
             phi_cs = 33
-            if row['IB'] <= 22:
-                df.at[i, 'su_HB'] = (row['qt_calc'] - row['Total Stress (kPa)']) / Nkt
+            if IB <= 22:
+                df.at[i, 'su_HB'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
                 df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # -------------------------- end cu calculations -----------------------------------------------------------
@@ -399,12 +415,12 @@ def soil_parameters(df, site):
 
             # ------------------------------------- su -----------------------------------------------------------------
             # from Hutabarat and Bray 2022 method to calculate CR and LD
-            df.at[i, 'IB'] = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
+            IB = 100 * (row['Qtn'] + 10) / (row['Qtn'] * row['Fr (%)'] + 70)
             Nkt = 15
             K0 = 0.5
             phi_cs = 33
-            if row['IB'] <= 22:
-                df.at[i, 'su_HB'] = (row['qt_calc'] - row['Total Stress (kPa)']) / Nkt
+            if IB <= 22:
+                df.at[i, 'su_HB'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
                 df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # ------------------------------------- end su -------------------------------------------------------------
@@ -458,7 +474,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
     # Calculating K sigma
     for i in range(len(df.index)):
         row = df.loc[i]  # this takes a screenshot
-        if row['Dr I'] == 'No Solution':
+        if np.isnan(row['Dr I']) is True:
             df.at[i, 'qc1n'] = float('NaN')
         else:
             df.at[i, 'qc1n'] = ((row['Dr I'] + 1.063) / .478) ** (
@@ -470,6 +486,8 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
             FC = 100
         elif FC < 0:
             FC = 0
+        df.at[i, 'FC'] = FC
+
         qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(
             1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
         df.at[i, "qc1ncs"] = qc1ncs
@@ -574,9 +592,9 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
     df.at[0, h2_columnn_name] = h2_thickness
 
     if h2_thickness >= .3:
-        df.at[0, 'Clay_profile'] = 0
+        df.at[0, 'clay_profile'] = 0
     else:
-        df.at[0, 'Clay_profile'] = 1
+        df.at[0, 'clay_profile'] = 1
 
     # This commented code will apply a cap of 10m to h1 and h2
     # if h1_thickness > 10:
@@ -972,6 +990,7 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
             phi_cs = 33
 
             IB = 100 * (Qtn + 10) / (Qtn * Fr + 70)
+
             if IB <= 22:
                 su = (qt - total_stress) / Nkt
             else:
@@ -990,8 +1009,8 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
             h_A = depth
 
             if Ic < 1:
-                # kv = .0081658
-                print("this site has an Ic value less than 1 at " + str(depth))
+                # kv = 0.0081658
+                print("this site has an Ic value less than 1 at " + str(depth)) # NOTE: Ignored these low and high Ic values that caused large jumps in LD value
                 continue
             elif Ic > 4:
                 # kv = 1*10**-10
@@ -1011,6 +1030,8 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
 
             if h_exc >= h_A:
                 LD += (kv / kcs * (h_exc - h_A) * gamma_water) * (depth - depth_before)
+        elif depth > zb:
+            break
 
     df.at[0,'LD'] = LD
     df.at[0, 'CR'] = CR
