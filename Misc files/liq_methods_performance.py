@@ -1,9 +1,15 @@
 import pandas as pd
+import time
+import datetime
+
+# time.sleep(60*20)
 
 ################ USER INPUTS ############################
 input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\liq_param_compiled 03 19.xlsx"
 export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update"
 #########################################################
+current_time = datetime.datetime.now()
+date = f'{current_time}'
 
 df = pd.read_excel(input_file_path)
 scrap = pd.DataFrame()
@@ -29,4 +35,4 @@ for column in df.columns:
         df.at[i, "value"] = df[str(column)].sum()
         i += 1
 
-df.to_excel(f'{export_file_path}\liq_methods_performance 03 22.xlsx', index=False)
+df.to_excel(f'{export_file_path}\liq_methods_performance {date}.xlsx', index=False)

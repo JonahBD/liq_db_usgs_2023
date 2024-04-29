@@ -1,11 +1,17 @@
 import pandas as pd
 import glob, os
 from tqdm import tqdm
+import time
+import datetime
+
+# time.sleep(60*60*3.7)
 
 ################ USER INPUTS ############################
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters 3-18"
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 #########################################################
+current_time = datetime.datetime.now()
+date = f'{current_time}'
 
 sites = []
 liq_df = pd.DataFrame()
@@ -47,7 +53,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     liq_df.at[indx_counter, 'CR'] = df.loc[0]['CR']
 
-    liq_df.at[indx_counter, f'Clay_profile'] = df.loc[0][f'Clay_profile']
+    liq_df.at[indx_counter, f'clay_profile'] = df.loc[0][f'clay_profile']
 
     if (df.loc[0]['zb'] - df.loc[0]['za']) >= 0.75 * df.loc[0]['h2_cumulative']:
         liq_df.at[indx_counter, 'stratified'] = 0
@@ -83,4 +89,4 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     loop.update(1)
 loop.close()
 
-liq_df.to_excel(f'{export_folder_path}\liq_param_compiled 03 22.xlsx', index=False)
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled {date}.xlsx', index=False)

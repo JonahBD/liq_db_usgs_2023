@@ -496,7 +496,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
 
         if 2.6 > row["Ic"] > 0:
             c_sigma = 1 / (37.3 - 8.27 * row['qc1n'] ** .264)# NOTE: Idriss and Boulganger 2008 uses qc1n while I&B 2014 uses qc1ncs
-            if c_sigma > .3:
+            if c_sigma > .3 or row['qc1n'] > 300:
                 c_sigma = .3
 
             Kσ = 1 - c_sigma * np.log(row["Effective Stress (kPa)"] / Pa)
