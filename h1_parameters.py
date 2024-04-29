@@ -4,6 +4,7 @@ import numpy as np
 import glob, os
 import scipy.stats
 import time
+
 # time.sleep(60*60*3.5)
 
 ################ USER INPUTS ############################
@@ -11,14 +12,17 @@ input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 depth_column_name = "Depth (m)"
 date_of_creation = '04 05'
+number_of_methods = 9
 #########################################################
 
 h1_site_parameters_col = ['Liquefaction', 'ishihara_curve_basic_results',
                           'ishihara_curve_cumulative_results', 'towhata_basic_results',
                           'towhata_cumulative_results', 'LSN_results', 'LPIish_basic_results',
-                          'LPIish_cumulative_results', 'LD_and_CR_binary_results', 'LPI_results']
-h1_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs', "φ' R",
-             "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I']
+                          'LPIish_cumulative_results', 'LD_and_CR_binary_results', 'LPI_results', 'h2_basic',
+                          'h2_cumulative']
+h1_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs',
+                     "φ' R",
+                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I']
 
 sites = []
 
@@ -63,13 +67,43 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         values = df[col].to_numpy()
         sliced_values = values[0:index]
         # print(col)
-        h1_parameters_df.at[counter, str(col)+"_mean"] = np.nanmean(sliced_values)
-        h1_parameters_df.at[counter, str(col)+"_median"] = np.nanmedian(sliced_values)
-        h1_parameters_df.at[counter, str(col)+"_std"] = np.nanstd(sliced_values)
-        h1_parameters_df.at[counter, str(col)+"_skew"] = scipy.stats.skew(sliced_values, nan_policy='omit')
+        h1_parameters_df.at[counter, str(col) + "_mean"] = np.nanmean(sliced_values)
+        h1_parameters_df.at[counter, str(col) + "_median"] = np.nanmedian(sliced_values)
+        h1_parameters_df.at[counter, str(col) + "_std"] = np.nanstd(sliced_values)
+        h1_parameters_df.at[counter, str(col) + "_skew"] = scipy.stats.skew(sliced_values, nan_policy='omit')
 
     for col in h1_site_parameters_col:
         h1_parameters_df.at[counter, str(col)] = df.loc[0, str(col)]
+
+    if h1_parameters_df.loc[counter, 'Liquefaction'] == 1:
+        h1_parameters_df.at[counter, 'methods_perform'] = (h1_parameters_df.loc[counter, 'ishihara_curve_basic_results'] + h1_parameters_df.loc[
+            counter, 'ishihara_curve_cumulative_results'] + h1_parameters_df.loc[counter, 'towhata_basic_results'] + h1_parameters_df.loc[
+                                                               counter, 'towhata_cumulative_results'] + h1_parameters_df.loc[
+                                                               counter, 'LSN_results'] + h1_parameters_df.loc[
+                                                               counter, 'LPIish_basic_results'] + h1_parameters_df.loc[
+                                                               counter, 'LPIish_cumulative_results'] + h1_parameters_df.loc[
+                                                               counter, 'LD_and_CR_binary_results'] + h1_parameters_df.loc[
+                                                               counter, 'LPI_results']) / number_of_methods
+        if h1_parameters_df.loc[counter, "methods_perform"] == 0:
+            h1_parameters_df.at[counter, 'methods_perform'] = 2
+    else:
+        h1_parameters_df.at[counter, 'methods_perform'] = -(number_of_methods - (h1_parameters_df.loc[
+                                                               counter, 'ishihara_curve_basic_results'] +
+                                                           h1_parameters_df.loc[
+                                                               counter, 'ishihara_curve_cumulative_results'] +
+                                                           h1_parameters_df.loc[counter, 'towhata_basic_results'] +
+                                                           h1_parameters_df.loc[
+                                                               counter, 'towhata_cumulative_results'] +
+                                                           h1_parameters_df.loc[
+                                                               counter, 'LSN_results'] + h1_parameters_df.loc[
+                                                               counter, 'LPIish_basic_results'] + h1_parameters_df.loc[
+                                                               counter, 'LPIish_cumulative_results'] +
+                                                           h1_parameters_df.loc[
+                                                               counter, 'LD_and_CR_binary_results'] +
+                                                           h1_parameters_df.loc[
+                                                               counter, 'LPI_results'])) / number_of_methods
+        if h1_parameters_df.loc[counter, "methods_perform"] == 0:
+            h1_parameters_df.at[counter, 'methods_perform'] = -2
 
     if counter == 30:
         h1_parameters_df.to_excel(f'{export_folder_path}\h1_parameters {date_of_creation}.xlsx', index=False)
