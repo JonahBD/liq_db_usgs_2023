@@ -9,7 +9,7 @@ from datetime import date
 # time.sleep(60*60*3.5)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\Soil parameters 4 5"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\Soil parameters 4-29"
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 depth_column_name = "Depth (m)"
 number_of_methods = 9
@@ -66,11 +66,20 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     sand_perc = sand / (sand + clay) * 100
     h1_parameters_df.at[counter, 'sand_percent'] = sand_perc
 
+    depths_sliced = depths[0:index]
+    first_depth_value = depths[0]
+    depth_offset = np.append(first_depth_value, depths_sliced)[:-1]
+    thickness = depths_sliced - depth_offset
+
     for col in h1_parameters_col:
         # print(col)
         values = df[col].to_numpy()
         sliced_values = values[0:index]
         # print(col)
+        if str(col) == "k (m/s)":
+            H_over_k = np.divide(thickness, sliced_values)
+            H_over_k = H_over_k[np.logical_not(np.isnan(H_over_k))]
+            h1_parameters_df.at[counter, str(col) + "_equivalent"] = h1_depth / (np.sum(H_over_k))
         h1_parameters_df.at[counter, str(col) + "_mean"] = np.nanmean(sliced_values)
         h1_parameters_df.at[counter, str(col) + "_median"] = np.nanmedian(sliced_values)
         h1_parameters_df.at[counter, str(col) + "_std"] = np.nanstd(sliced_values)
