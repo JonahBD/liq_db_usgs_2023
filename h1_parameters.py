@@ -4,6 +4,7 @@ import numpy as np
 import glob, os
 import scipy.stats
 import time
+from datetime import date
 
 # time.sleep(60*60*3.5)
 
@@ -11,18 +12,21 @@ import time
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\Soil parameters 4 5"
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 depth_column_name = "Depth (m)"
-date_of_creation = '04 05'
 number_of_methods = 9
+name_of_export_file = 'h1_parameters_no_clay_italy'
 #########################################################
+today_date = date.today()
+date = f'{today_date.month}-{today_date.day}'
+print(date)
 
 h1_site_parameters_col = ['Liquefaction', 'ishihara_curve_basic_results',
                           'ishihara_curve_cumulative_results', 'towhata_basic_results',
                           'towhata_cumulative_results', 'LSN_results', 'LPIish_basic_results',
                           'LPIish_cumulative_results', 'LD_and_CR_binary_results', 'LPI_results', 'h2_basic',
-                          'h2_cumulative']
+                          'h2_cumulative'] #'Liquefaction_italy',
 h1_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs',
                      "φ' R",
-                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I']
+                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic']
 
 sites = []
 
@@ -75,41 +79,32 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     for col in h1_site_parameters_col:
         h1_parameters_df.at[counter, str(col)] = df.loc[0, str(col)]
 
-    if h1_parameters_df.loc[counter, 'Liquefaction'] == 1:
-        h1_parameters_df.at[counter, 'methods_perform'] = (h1_parameters_df.loc[counter, 'ishihara_curve_basic_results'] + h1_parameters_df.loc[
-            counter, 'ishihara_curve_cumulative_results'] + h1_parameters_df.loc[counter, 'towhata_basic_results'] + h1_parameters_df.loc[
-                                                               counter, 'towhata_cumulative_results'] + h1_parameters_df.loc[
-                                                               counter, 'LSN_results'] + h1_parameters_df.loc[
-                                                               counter, 'LPIish_basic_results'] + h1_parameters_df.loc[
-                                                               counter, 'LPIish_cumulative_results'] + h1_parameters_df.loc[
-                                                               counter, 'LD_and_CR_binary_results'] + h1_parameters_df.loc[
-                                                               counter, 'LPI_results']) / number_of_methods
-        if h1_parameters_df.loc[counter, "methods_perform"] == 0:
-            h1_parameters_df.at[counter, 'methods_perform'] = 2
-    else:
-        h1_parameters_df.at[counter, 'methods_perform'] = -(number_of_methods - (h1_parameters_df.loc[
-                                                               counter, 'ishihara_curve_basic_results'] +
-                                                           h1_parameters_df.loc[
-                                                               counter, 'ishihara_curve_cumulative_results'] +
-                                                           h1_parameters_df.loc[counter, 'towhata_basic_results'] +
-                                                           h1_parameters_df.loc[
-                                                               counter, 'towhata_cumulative_results'] +
-                                                           h1_parameters_df.loc[
-                                                               counter, 'LSN_results'] + h1_parameters_df.loc[
-                                                               counter, 'LPIish_basic_results'] + h1_parameters_df.loc[
-                                                               counter, 'LPIish_cumulative_results'] +
-                                                           h1_parameters_df.loc[
-                                                               counter, 'LD_and_CR_binary_results'] +
-                                                           h1_parameters_df.loc[
-                                                               counter, 'LPI_results'])) / number_of_methods
-        if h1_parameters_df.loc[counter, "methods_perform"] == 0:
-            h1_parameters_df.at[counter, 'methods_perform'] = -2
+    sum_performance = 0
+    for method in h1_site_parameters_col:
+        if method in ['Liquefaction', 'h2_basic', 'h2_cumulative']:
+            continue
+        if h1_parameters_df.loc[counter, 'Liquefaction'] == 1: #liq sites
+            sum_performance += h1_parameters_df.loc[counter, method]
+            methods_performance = sum_performance / number_of_methods
+            h1_parameters_df.at[counter, 'methods_perform'] = methods_performance
+
+            if methods_performance == 0:
+                h1_parameters_df.at[counter, 'methods_perform'] = 2
+
+        else: #Non liq sites
+            sum_performance += h1_parameters_df.loc[counter, method]
+            methods_performance = (number_of_methods - sum_performance) / number_of_methods * -1
+            h1_parameters_df.at[counter, 'methods_perform'] = methods_performance
+
+            if methods_performance == 0:
+                h1_parameters_df.at[counter, 'methods_perform'] = -2
+
 
     if counter == 30:
-        h1_parameters_df.to_excel(f'{export_folder_path}\h1_parameters {date_of_creation}.xlsx', index=False)
+        h1_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file} {date}.xlsx', index=False)
 
     counter += 1
     loop.update(1)
 loop.close()
 
-h1_parameters_df.to_excel(f'{export_folder_path}\h1_parameters {date_of_creation}.xlsx', index=False)
+h1_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file} {date}.xlsx', index=False)

@@ -2,7 +2,7 @@ import pandas as pd
 import glob, os
 from tqdm import tqdm
 import time
-import datetime
+from datetime import date
 
 # time.sleep(60*60*3.7)
 
@@ -10,8 +10,8 @@ import datetime
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters 3-18"
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 #########################################################
-current_time = datetime.datetime.now()
-date = f'{current_time}'
+today_date = date.today()
+date = f'{today_date.month}-{today_date.day}'
 
 sites = []
 liq_df = pd.DataFrame()
