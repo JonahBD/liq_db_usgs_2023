@@ -14,9 +14,9 @@ GWT_zero_nan = []
 LD_not_working = []
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\Step 5 our files"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
-vals_pga_and_liq = r"C:\Users\jdundas2\Documents\PGA-liq values 02 13 23.xlsx"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters half stdv lower pga 05 31 24"
+vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\half stdv lower PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -80,6 +80,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = h1_h2_basic(df, depth_column_name, "FS")
     df = h1_h2_cumulative(df, depth_column_name, "FS")
+
+    if df.loc[0, 'clay_profile'] == 1:
+        loop.update(1)
+        continue
 
     df = LPI(df, depth_column_name, "FS")
     df = LPI(df, depth_column_name, "FS")
