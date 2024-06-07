@@ -5,6 +5,9 @@ import glob, os
 import scipy.stats
 import time
 from datetime import date
+import warnings
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # time.sleep(60*60*3.5)
 
