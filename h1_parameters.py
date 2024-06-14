@@ -16,7 +16,7 @@ input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\
 export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
 depth_column_name = "Depth (m)"
 number_of_methods = 9
-name_of_export_file = 'h1_parameters_no_clay_italy'
+name_of_export_file = 'h1_parameters_all_sites'
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -50,9 +50,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         continue
 
     df = pd.read_excel(filename)
-    if df.loc[0, 'clay_profile'] == 1:
-        loop.update(1)
-        continue
+    # if df.loc[0, 'clay_profile'] == 1:
+    #     loop.update(1)
+    #     continue
 
     h1_parameters_df.at[counter, 'site'] = site
     h1_depth = df.loc[0, 'h1_basic']

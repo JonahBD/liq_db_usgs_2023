@@ -4,11 +4,11 @@ from tqdm import tqdm
 import time
 from datetime import date
 
-# time.sleep(60*60*3.7)
+# time.sleep(60*60*4)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters 3-18"
-export_folder_path = r'C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update'
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\PG adj"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -31,62 +31,35 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = pd.read_excel(filename)
 
+    site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'stratified', 'clay_profile', 'h1b_sand_percent',
+                            'h1_basic', 'h1_cumulative', 'h2_basic', 'h2_cumulative', 'methods_perform', 'za', 'zb','LD', 'CR']
 
-    #Columns to add to liq sheet
-    liq_df.at[indx_counter,"site"] = site
+    methods = ['LPI', 'towhata_basic', 'towhata_cumulative', 'LPIish_basic', 'LPIish_cumulative', 'LSN',
+               'ishihara_curve_basic', 'ishihara_curve_cumulative']
 
-    liq_df.at[indx_counter,"LPI"] = df.loc[0]["LPI"]
+    # Columns to add to liq sheet
+    liq_df.at[indx_counter, "site"] = site
 
-    liq_df.at[indx_counter, f'towhata_basic'] = df.loc[0][f'towhata_basic']
+    liq_df.at[indx_counter, 'EQ'] = df.loc[0, 'EQ']
+    liq_df.at[indx_counter, 'EQ_mag'] = df.loc[1, 'EQ']
 
-    liq_df.at[indx_counter, f'towhata_basic'] = df.loc[0][f'towhata_basic']
+    for site_characteristic in site_characteristics:
+        liq_df.at[indx_counter, site_characteristic] = df.loc[0, site_characteristic]
 
-    liq_df.at[indx_counter, f'towhata_cumulative'] = df.loc[0][f'towhata_cumulative']
+    liq_df.at[indx_counter, 'LD_and_CR_results'] = df.loc[0, 'LD_and_CR_results']
 
-    liq_df.at[indx_counter, "LPIish_basic"] = df.loc[0]["LPIish_basic"]
+    for method in methods:
+        if method == "ishihara_curve_basic" or method == 'ishihara_curve_cumulative':
+            continue
+        liq_df.at[indx_counter, method] = df.loc[0][method]
 
-    liq_df.at[indx_counter, "LPIish_cumulative"] = df.loc[0]["LPIish_cumulative"]
+    liq_df.at[indx_counter, 'LD_and_CR_binary_results'] = df.loc[0, 'LD_and_CR_binary_results']
 
-    liq_df.at[indx_counter, 'LSN'] = df.loc[0]['LSN']
-
-    liq_df.at[indx_counter, 'LD'] = df.loc[0]['LD']
-
-    liq_df.at[indx_counter, 'CR'] = df.loc[0]['CR']
-
-    liq_df.at[indx_counter, f'clay_profile'] = df.loc[0][f'clay_profile']
-
-    if (df.loc[0]['zb'] - df.loc[0]['za']) >= 0.75 * df.loc[0]['h2_cumulative']:
-        liq_df.at[indx_counter, 'stratified'] = 0
-    else:
-        liq_df.at[indx_counter, 'stratified'] = 1
-
-    #Results section
-    liq_df.at[indx_counter, f'LPI_results'] = df.loc[0][f'LPI_results']
-
-    liq_df.at[indx_counter, f'towhata_basic_results'] = df.loc[0][f'towhata_basic_results']
-
-    liq_df.at[indx_counter, f'towhata_basic_results'] = df.loc[0][f'towhata_basic_results']
-
-    liq_df.at[indx_counter, f'towhata_cumulative_results'] = df.loc[0][f'towhata_cumulative_results']
-
-    liq_df.at[indx_counter, "LPIish_basic" + "_results"] = df.loc[0]["LPIish_basic" + "_results"]
-
-    liq_df.at[indx_counter, "LPIish_cumulative" + "_results"] = df.loc[0]["LPIish_cumulative" + "_results"]
-
-    liq_df.at[indx_counter, 'LSN' + "_results"] = df.loc[0]['LSN' + "_results"]
-
-    liq_df.at[indx_counter, 'LD_and_CR_results'] = df.loc[0]['LD_and_CR_results']
-
-    liq_df.at[indx_counter, 'LD_and_CR_binary_results'] = df.loc[0]['LD_and_CR_binary_results']
-
-    liq_df.at[indx_counter, 'ishihara_curve_basic_results'] = df.loc[0]['ishihara_curve_basic_results']
-
-    liq_df.at[indx_counter, 'ishihara_curve_cumulative_results'] = df.loc[0]['ishihara_curve_cumulative_results']
-
-    liq_df.at[indx_counter, 'Liquefaction'] = df.loc[0]['Liquefaction']
+    for method_results in methods:
+        liq_df.at[indx_counter, f'{method_results}_results'] = df.loc[0,f'{method_results}_results']
 
     indx_counter += 1
     loop.update(1)
 loop.close()
 
-liq_df.to_excel(f'{export_folder_path}\liq_param_compiled {date}.xlsx', index=False)
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{date}.xlsx', index=False)

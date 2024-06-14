@@ -1,3 +1,11 @@
+"""
+Preforo is below GWT (but is checked and ok): 036021P6CPTU6, 036022P800CPTU815, 037024P301CPTE312, 037024P594CPTU608,
+037024P696CPTE722, 038016P512CPTU512, 038018P379CPTU396, 038021P179CPTU188, 038022P272CPTU293
+
+"""
+
+
+
 from functions import *
 import pandas as pd
 import numpy as np
@@ -15,8 +23,8 @@ LD_not_working = []
 
 ################ USER INPUTS ############################
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\soil parameters half stdv lower pga 05 31 24"
-vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\half stdv lower PGA-liq values 02 13 23.xlsx"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\Soil Parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -81,9 +89,11 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     df = h1_h2_basic(df, depth_column_name, "FS")
     df = h1_h2_cumulative(df, depth_column_name, "FS")
 
-    if df.loc[0, 'clay_profile'] == 1:
-        loop.update(1)
-        continue
+    df = h1_basic_sand_percent(df, depth_column_name)
+
+    # if df.loc[0, 'clay_profile'] == 1:
+    #     loop.update(1)
+    #     continue
 
     df = LPI(df, depth_column_name, "FS")
     df = LPI(df, depth_column_name, "FS")
@@ -101,6 +111,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = LD_and_CR(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
 
+    df = methods_performance_variable(df)
+
     if (df.loc[0]['zb'] - df.loc[0]['za']) >= 0.75 * df.loc[0]['h2_cumulative']:
         df.at[0, 'stratified'] = 0
     else:
@@ -113,10 +125,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'FC', 'rd', "CSR",
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
-             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction','clay_profile', 'stratified',
-             'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
+             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
+             'clay_profile', 'stratified', 'h1b_sand_percent', 'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
              f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results', f'LPIish_cumulative_results',
-             'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results']]
+             'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results', 'methods_perform']]
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)
