@@ -25,7 +25,7 @@ pca_site_parameters_col = ['Liquefaction', 'LSN', 'LPIish_basic',
                           'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb'] #'Liquefaction_italy',
 pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs',
                      "φ' R",
-                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic']
+                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
 
 sites = []
 
@@ -101,7 +101,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
                 pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_equivalent"] = h1_depth / (np.sum(H_over_k))
             pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
             pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nanmedian(sliced_values)
-            # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
+            pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
             # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_skew"] = scipy.stats.skew(sliced_values, nan_policy='omit')
 
     for col in pca_site_parameters_col:

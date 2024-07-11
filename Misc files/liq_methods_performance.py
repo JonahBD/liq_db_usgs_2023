@@ -9,6 +9,7 @@ from sklearn.metrics import cohen_kappa_score
 input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\PGA Adj\liq_param_compiled_PGA_adj_6-14.xlsx"
 export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data"
 exclude_clay_sites = True
+name = "10_150_vs_method_nan_gone"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
