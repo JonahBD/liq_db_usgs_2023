@@ -60,6 +60,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     indx_counter += 1
     loop.update(1)
+    if indx_counter == 30:
+        liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_adj_pga 6_14 {date}.xlsx', index=False)
 loop.close()
 
 liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{date}.xlsx', index=False)

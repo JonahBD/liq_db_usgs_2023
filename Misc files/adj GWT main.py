@@ -1,4 +1,4 @@
-from functions import *
+from modified_for_pga_adj_functions import *
 import pandas as pd
 import glob, os
 from tqdm import tqdm
@@ -128,7 +128,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
 
         gwt = df.loc[0]['GWT [m]']
-        gwt_increase_increment = .99
+        gwt_increase_increment = .05
         # total = lpi + tow_c + tow_b + lpiish_c + lpiish_b + lsn + ish_c + ish_b + ld_cr
         # print(f'total: {total}')
         # print(gwt)
@@ -164,9 +164,6 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         elif float(f"{gwt:.2f}") <= 0:
             gwt = lower_bound
             continue
-
-
-
 
         if df.loc[0]['Liquefaction'] == 1:
             if ld_cr == 1 and lpi == 1:

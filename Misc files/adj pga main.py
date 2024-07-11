@@ -1,4 +1,4 @@
-from functions import *
+from modified_for_pga_adj_functions import *
 import pandas as pd
 import glob, os
 from tqdm import tqdm
@@ -162,13 +162,13 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
 
         if df.loc[0]['Liquefaction'] == 1:
-            if ld_cr == 1:
+            if lpi == 1:
                 keep_going = False
             else:
                 pga = pga * (pga_increase_incriment + 1)
                 counter += 1
         else:
-            if ld_cr == 0:
+            if lpi == 0:
                 keep_going = False
             else:
                 pga = pga * (1 - pga_increase_incriment)
