@@ -480,7 +480,8 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
                         1 / .264)  # from Dr I iterative calc (we backcalculate here)
         row = df.loc[i]
 
-        FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper
+        FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
+        # FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
         if FC > 100:
             FC = 100
         elif FC < 0:
@@ -773,10 +774,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         return 0
 
     def interpolator(lower_limit_FS_ev, lower_limit_FS, upper_limit_FS_ev, upper_limit_FS, FS):
-
-        range = lower_limit_FS_ev - upper_limit_FS_ev
-
-        return (upper_limit_FS - FS) * 10 * range + upper_limit_FS_ev
+        return upper_limit_FS_ev + (lower_limit_FS_ev - upper_limit_FS_ev)/(lower_limit_FS - upper_limit_FS) * (FS - upper_limit_FS)
 
     def Integrate_LSN(z):
         return eps * 10 / z
@@ -792,8 +790,10 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         depth = row[depth_column_name]
         if row[depth_column_name] <= 20 and not np.isnan(qc1ncs) and depth >= GWT:
             # total_rows_qc1ncs_qualifies += 1
-
-            eps = A1(qc1ncs)
+            if qc1ncs > 200:
+                eps = 0
+            else:
+                eps = A1(qc1ncs)
 
             if .5 <= FS <= .6 and 147 <= qc1ncs <= 200:
                 eps = interpolator(A1(qc1ncs), .5, A3(qc1ncs), .6, FS)
@@ -836,7 +836,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
                     FS = 2
                 eps = interpolator(A13(qc1ncs), 1.3, A14(qc1ncs), 2, FS)
 
-            if eps > 10: # NOTE: This capped value of 10 and extrapolating values when qc1ncs < 33 is Rollin's idea
+            if eps > 10: # NOTE: This capped value of 10 and extrapolating values when qc1ncs < 33 is Rollins' idea
                 eps = 10
 
         if i == 0:
@@ -847,7 +847,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         df.at[i,'eps'] = eps
 
     # LSN found in Maurer 2015 calibrating LSN paper
-    if LSN < 20:
+    if LSN < 10:
         result = "Little to no manifestation of liquefaction expected"
         binary = 0
     elif LSN < 40:
@@ -963,13 +963,18 @@ def LD_and_CR (df, Ic_column_name, depth_column_name, FS_column_name, vert_effec
     if za_temp is not None and counter == 0:
         za = za_temp
         zb = 15
+        if za > 15:
+            za = 15
     elif za is None or za > 15:
         za = 15
         zb = 15
     elif zb_temp is not None:
         zb = zb_temp
+        if zb > 15:
+            zb = 15
     elif zb is None or zb > 15:
         zb = 15
+
 
     kcs = 10 ** (.952 - 3.04 * 1.8)
     gamma_water = 9.81 # kN/m^3

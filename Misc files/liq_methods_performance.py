@@ -6,10 +6,10 @@ from sklearn.metrics import cohen_kappa_score
 # time.sleep(60*20)
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\PGA Adj\liq_param_compiled_PGA_adj_6-14.xlsx"
-export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data"
-exclude_clay_sites = True
-name = "10_150_vs_method_nan_gone"
+input_file_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff\liq_param_compiled_2010_soil_param_7-29.xlsx"
+export_file_path = r'C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff'
+exclude_clay_sites = False
+name = "LSN 10 2010"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -60,6 +60,6 @@ for column in df.columns:
 df = pd.concat([df, results], axis=1)
 
 if exclude_clay_sites:
-    df.to_excel(f'{export_file_path}\liq_methods_performance_PGA_adj_without_clay {date}.xlsx', index=False)
+    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_without_clay {date}.xlsx', index=False)
 else:
-    df.to_excel(f'{export_file_path}\liq_methods_performance_PGA_adj_with_clay {date}.xlsx', index=False)
+    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_with_clay {date}.xlsx', index=False)

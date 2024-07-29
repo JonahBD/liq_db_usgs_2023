@@ -12,7 +12,9 @@ import numpy as np
 import glob, os
 from datetime import datetime
 from tqdm import tqdm
-
+import time
+# time.sleep(60*60*3)
+#takes 8 hours to run
 missing_pga = []
 preforo_below_GWT = []
 nan_preforo = []
@@ -20,11 +22,12 @@ missing_date = []
 GWT_or_preforo_wrong_type = []
 GWT_zero_nan = []
 LD_not_working = []
-#Takes about 5 hours and 10 mintues to run on 2115 files
+
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\Soil Parameters"
-vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\PGA-liq values 02 13 23.xlsx"
+#MAKE SURE TO CHANGE FINES CONTENT WHEN YOU RUN THIS TO THE IB METHOD NOT ITALY
+input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\eq_2010"
+export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff\2010_soil_param"
+# vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -32,13 +35,13 @@ depth_column_name = "Depth (m)"
 sites = []
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls").lstrip("Copy of")
+    site = os.path.basename(filename).rstrip(".xls")
     sites.append(site)
 
 loop = tqdm(total=(len(sites)))
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
-    site = os.path.basename(filename).rstrip(".xls").lstrip("Copy of")
+    site = os.path.basename(filename).rstrip(".xls")
     # print(site)
     loop.set_description(f"soil parameters - {site} :")
 
@@ -70,13 +73,13 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = soil_parameters(df, site)
 
-    try:
-        df = PGA_insertion(df,vals_pga_and_liq, site)
-    except KeyError:
-        # print("This site is missing its PGA: " + site)
-        missing_pga.append(site)
-        loop.update(1)
-        continue
+    # try:
+    #     df = PGA_insertion(df,vals_pga_and_liq, site)
+    # except KeyError:
+    #     # print("This site is missing its PGA: " + site)
+    #     missing_pga.append(site)
+    #     loop.update(1)
+    #     continue
 
     preforo_checker = preforo_check(df, "GWT [m]", "preforo [m]")
     if preforo_checker == "GWT is above preforo":
@@ -125,10 +128,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'FC', 'rd', "CSR",
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
-             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
+             "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
              'clay_profile', 'stratified', 'h1b_sand_percent', 'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
              f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results', f'LPIish_cumulative_results',
-             'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results', 'methods_perform']]
+             'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results', 'methods_perform']]#NOTE: took out the 'u [si/no]' from here
 
     df.to_excel(export_folder_path_df, index=False)
     loop.update(1)

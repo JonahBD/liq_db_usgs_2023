@@ -15,7 +15,7 @@ pd.read_hdf(r"C:\Users\hf233\Downloads\CANTERBURYDATASET.h5", "CANTERBURYDATASET
 # --- CSV
 # File - --
 import pandas as pd
-
+#TAkes about 1 hour 5 minutes to run
 full_df = pd.read_csv(r"C:\Users\hf233\Downloads\CANTERBURYDATASET (1).csv", index_col=0)
 
 # Disclaimer: When loading as a CSV the columns with multiple values (e.g. magnitude) will need additional processing to be accessed as an array.
@@ -75,17 +75,17 @@ loop = tqdm(total=(len(sites)))
 for index, row in full_df.iterrows():
     # print(site)
     site = row['CPTname']
-    loop.set_description(f"soil parameters - {site} :")
+    loop.set_description(f"Homogenizing - {site} :")
 
     # print(type(row['Date']))
-    df = pd.DataFrame({'Depth (m)': row['depth'], 'qc (MPa)': row['qc'], 'fs (kPa)': row['fs'], 'u (kPa)': row['u2'], 'GWT [m]': '', 'Date of CPT [gg/mm/aa]': '', 'preforo [m]': '', "Unnamed: 5": ''})
+    df = pd.DataFrame({'Depth (m)': row['depth'], 'qc (MPa)': row['qc']/1000, 'fs (kPa)': row['fs'], 'u (kPa)': row['u2'], 'GWT [m]': '', 'Date of CPT [gg/mm/aa]': '', 'preforo [m]': '', "Unnamed: 5": ''})
     df = df.drop(df.index[0])
 
     # Reset the index
     df = df.reset_index(drop=True)
     def qt(df):
         for index, row in df.iterrows():
-            df.at[index,'qt (MPa)'] = row['qc (MPa)'] + row['u (kPa)'] * (1 - .8)#cliq uses .8, found in Gregg drilling guide 7
+            df.at[index,'qt (MPa)'] = row['qc (MPa)'] + row['u (kPa)']/1000 * (1 - .8)#cliq uses .8, found in Gregg drilling guide 7
         return df
     df = qt(df)
 
@@ -97,7 +97,10 @@ for index, row in full_df.iterrows():
         df.at[1, 'EQ'] = row['Magnitude'][n]
         df.at[0,'GWT [m]'] = row['GWT'][n]
         df.at[0, 'PGA'] = row['PGA'][n]
-        if row['Manifestation'][n] > 0:
+        if row['Manifestation'][n] == 10 or row['Manifestation'][n] == 4 or row['Manifestation'][n] == 5: #NOTE: this will change how many sites get used for each EQ
+            continue
+            #https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-2937%2FData%20Paper%20Manuscript.pdf
+        elif row['Manifestation'][n] > 0:
             df.at[0, "Liquefaction"] = 1
         else:
             df.at[0, "Liquefaction"] = 0
