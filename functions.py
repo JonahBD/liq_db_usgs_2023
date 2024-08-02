@@ -482,6 +482,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
 
         FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
         # FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
+        FC =  #Christchurch specific FC equation from Maurer et al 2019 Development of region-specific soil behavior type index correlations for evaluating liquefaction hazard in Christchurch, New Zealand
         if FC > 100:
             FC = 100
         elif FC < 0:

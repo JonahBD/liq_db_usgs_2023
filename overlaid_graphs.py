@@ -36,6 +36,7 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     # c_LPI = np.array(cliq_data[cliq_data.columns[29]])
     c_rd = np.array(cliq_data[cliq_data.columns[7]])
     c_strain = np.array(cliq_data[cliq_data.columns[31]])
+    c_qt = np.array(cliq_data[cliq_data.columns[16]])
 
     # c_qc = np.array(cliq_data[cliq_data.columns[1]])
     # c_fs = np.array(cliq_data[cliq_data.columns[2]])
@@ -56,24 +57,25 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     fs = np.array(our_data[our_data.columns[2]])
     total_stress = np.array(our_data[our_data.columns[7]])
     effective_stress = np.array(our_data[our_data.columns[8]])
-    CSR = np.array(our_data[our_data.columns[37]])
+    CSR = np.array(our_data[our_data.columns[39]])
     CSR[CSR > 2] = 2
-    k_sigma = np.array(our_data[our_data.columns[35]])
+    k_sigma = np.array(our_data[our_data.columns[36]])
     Ic = np.array(our_data[our_data.columns[10]])
     # m = np.array(our_data[our_data.columns[15]])
-    qc1N = np.array(our_data[our_data.columns[31]])
-    qc1Ncs = np.array(our_data[our_data.columns[33]]) # Note: 3
-    CRR = np.array(our_data[our_data.columns[38]])
+    qc1N = np.array(our_data[our_data.columns[32]])
+    qc1Ncs = np.array(our_data[our_data.columns[34]]) # Note: 3
+    CRR = np.array(our_data[our_data.columns[40]])
     CRR[CRR > 4] = 4
-    FS = np.array(our_data[our_data.columns[39]])
+    FS = np.array(our_data[our_data.columns[41]])
     FS[FS > 2] = 2
     # LPI = np.array(our_data[our_data.columns[53]])
-    rd = np.array(our_data[our_data.columns[36]])
-    strain = np.array(our_data[our_data.columns[34]])
+    rd = np.array(our_data[our_data.columns[38]])
+    strain = np.array(our_data[our_data.columns[35]])
+    qt = np.array(our_data[our_data.columns[4]])
 
-    our_columns = [qc, fs, total_stress, effective_stress, CSR, k_sigma, Ic, qc1N, qc1Ncs, CRR, FS, rd, strain]
-    column_names = ['qc', 'fs', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'qc1N', 'qc1Ncs', 'CRR', 'FS', 'rd', 'eps']
-    cliq_columns = [c_qc, c_fs, c_total_stress, c_effective_stress, c_CSR, c_k_sigma, c_Ic, c_qc1N, c_qc1Ncs, c_CRR, c_FS, c_rd, c_strain]
+    our_columns = [qc, fs, total_stress, effective_stress, CSR, k_sigma, Ic, qc1N, qc1Ncs, CRR, FS, rd, strain, qt]
+    column_names = ['qc', 'fs (%)', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'qc1N', 'qc1Ncs', 'CRR', 'FS', 'rd', 'eps', 'qt']
+    cliq_columns = [c_qc, c_fs, c_total_stress, c_effective_stress, c_CSR, c_k_sigma, c_Ic, c_qc1N, c_qc1Ncs, c_CRR, c_FS, c_rd, c_strain, c_qt]
     counter = 0
 
     for our_column, cliq_column in zip(our_columns, cliq_columns):

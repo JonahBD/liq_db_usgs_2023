@@ -97,6 +97,8 @@ for index, row in full_df.iterrows():
         df.at[1, 'EQ'] = row['Magnitude'][n]
         df.at[0,'GWT [m]'] = row['GWT'][n]
         df.at[0, 'PGA'] = row['PGA'][n]
+        if df[depth_column_name].iloc[-1] < 20: #NOTE: This limits any files to a depth of greater than 20 m
+            continue
         if row['Manifestation'][n] == 10 or row['Manifestation'][n] == 4 or row['Manifestation'][n] == 5: #NOTE: this will change how many sites get used for each EQ
             continue
             #https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-2937%2FData%20Paper%20Manuscript.pdf
@@ -104,7 +106,7 @@ for index, row in full_df.iterrows():
             df.at[0, "Liquefaction"] = 1
         else:
             df.at[0, "Liquefaction"] = 0
-        df.to_excel(f'{export_folder_path}/eq_{eq_dates[n]}/{site}.xlsx', index=False)
+        df.to_excel(f'{export_folder_path}/eq_{eq_dates[n]}_final/{site}.xlsx', index=False)
 
     loop.update(1)
 loop.close()

@@ -15,7 +15,7 @@ export_folder_path = r'C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
 
-folder_list = ['2010_soil_param', '2011_soil_parameter', '2016_soil_parameters']
+folder_list = ['2010_soil_parameters_final', '2011_soil_parameters_final', '2016_soil_parameters_final']
 
 for folder in folder_list:
     sites = []
@@ -69,7 +69,7 @@ for folder in folder_list:
         indx_counter += 1
         loop.update(1)
         if indx_counter == 30:
-            liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{folder}_{date}.xlsx', index=False)
+            liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_final_{folder}_{date}.xlsx', index=False)
     loop.close()
 
-    liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{folder}_{date}.xlsx', index=False)
+    liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_final_{folder}_{date}.xlsx', index=False)

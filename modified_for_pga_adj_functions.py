@@ -1101,3 +1101,42 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
     else:
         preforo_check = "GWT is above preforo"
     return preforo_check
+
+def h1_basic_sand_percent(df, depth_column_name):
+    h1_depth = df.loc[0, 'h1_basic']
+    depths = df[depth_column_name].to_numpy()
+    h1_index = int(np.where(depths == h1_depth)[0][0])
+    Ic = df['Ic'].to_numpy()
+    Ic = Ic[0:h1_index]
+    Ic = Ic[~pd.isna(Ic)]
+    sand = (Ic < 2.6).sum()
+    clay = (Ic > 2.6).sum()
+    sand_perc = sand / (sand + clay) * 100
+    df.at[0, 'h1b_sand_percent'] = sand_perc
+    return df
+
+def methods_performance_variable(df):
+    number_of_methods = 9
+    methods = ['ishihara_curve_basic_results', 'ishihara_curve_cumulative_results', 'towhata_basic_results',
+                              'towhata_cumulative_results', 'LSN_results', 'LPIish_basic_results',
+                              'LPIish_cumulative_results', 'LD_and_CR_binary_results', 'LPI_results']
+
+    sum_performance = 0
+    for method in methods:
+        if df.loc[0, 'Liquefaction'] == 1: #liq sites
+            sum_performance += df.loc[0, method]
+            methods_performance = sum_performance / number_of_methods
+            df.at[0, 'methods_perform'] = methods_performance
+
+            if methods_performance == 0:
+                df.at[0, 'methods_perform'] = 2
+
+        else: #Non liq sites
+            sum_performance += df.loc[0, method]
+            methods_performance = (number_of_methods - sum_performance) / number_of_methods * -1
+            df.at[0, 'methods_perform'] = methods_performance
+
+            if methods_performance == 0:
+                df.at[0, 'methods_perform'] = -2
+
+    return df
