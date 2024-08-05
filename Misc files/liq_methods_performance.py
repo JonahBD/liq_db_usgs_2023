@@ -6,10 +6,11 @@ from sklearn.metrics import cohen_kappa_score
 # time.sleep(60*20)
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff\liq_param_compiled_2010_soil_param_7-29.xlsx"
-export_file_path = r'C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff'
-exclude_clay_sites = False
-name = "LSN 10 2010"
+input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 02\LSN 10 stuff\liq_param_compiled_2011_soil_parameter_7-29.xlsx"
+export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 02\LSN 10 stuff"
+exclude_clay_sites = True
+name = "2011"
+attempt_number = "A02"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -60,6 +61,6 @@ for column in df.columns:
 df = pd.concat([df, results], axis=1)
 
 if exclude_clay_sites:
-    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_without_clay {date}.xlsx', index=False)
+    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_without_clay_{attempt_number}.xlsx', index=False)
 else:
-    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_with_clay {date}.xlsx', index=False)
+    df.to_excel(f'{export_file_path}\liq_methods_performance_{name}_with_clay_{attempt_number}.xlsx', index=False)

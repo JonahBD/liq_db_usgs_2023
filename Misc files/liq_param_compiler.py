@@ -4,11 +4,13 @@ from tqdm import tqdm
 import time
 from datetime import date
 
-# time.sleep(60*60*4)
+# time.sleep(60*60*9)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\PG adj"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\2010 cliq check\soil parameters"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\2010 cliq check"
+name = "2010"
+attempt_number = "check"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -61,7 +63,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     indx_counter += 1
     loop.update(1)
     if indx_counter == 30:
-        liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_adj_pga 6_14 {date}.xlsx', index=False)
+        liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{name}_{attempt_number}.xlsx', index=False)
 loop.close()
 
-liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{date}.xlsx', index=False)
+liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{name}_{attempt_number}.xlsx', index=False)

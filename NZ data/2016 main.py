@@ -24,10 +24,9 @@ GWT_zero_nan = []
 LD_not_working = []
 
 ################ USER INPUTS ############################
-#MAKE SURE TO CHANGE FINES CONTENT WHEN YOU RUN THIS TO THE IB METHOD NOT ITALY
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\eq_2016"
-export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff\2016_soil_parameters"
-# vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\PGA-liq values 02 13 23.xlsx"
+#NOTE: MAKE SURE TO CHANGE FINES CONTENT WHEN YOU RUN THIS TO THE IB METHOD NOT ITALY
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\2016 cliq check\excel files"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\2016 cliq check\soil parameters"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################

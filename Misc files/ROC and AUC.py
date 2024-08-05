@@ -7,8 +7,8 @@ from sklearn.linear_model import LogisticRegression
 
 #################################################################
 # Inputs
-df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\OG Data\liq_param_compiled_6-12.xlsx" )
-columns_of_interest = ['LPI_results']
+df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 04\liq_param_compiled_NZ_A04_soil_parameters_2016_A04.xlsx")
+columns_of_interest = ['LPI']
 #################################################################
 for method in columns_of_interest:
     # Split the data into features (X) and target variable (y)
@@ -39,7 +39,7 @@ for method in columns_of_interest:
     plt.ylabel('True Positive Rate')
     plt.title(f'Receiver Operating Characteristic (ROC) Analysis for {method}')
     plt.legend(loc="lower right")
-    # plt.show()
+    plt.show()
 
     youden_j = tpr - fpr
 

@@ -79,8 +79,8 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     counter = 0
 
     for our_column, cliq_column in zip(our_columns, cliq_columns):
-        plt.plot(X, cliq_column, color="green", label="cliq_data")
-        plt.plot(X, our_column, color="blue", label="our_data")
+        plt.plot(X, cliq_column, color="green", label="cliq_data", linewidth=1.5)
+        plt.plot(X, our_column, color="blue", label="our_data", linewidth=.75)
         plt.xlabel("Depth")
         plt.ylabel(column_names[counter])
         plt.legend()

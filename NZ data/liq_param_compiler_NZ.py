@@ -5,17 +5,17 @@ import time
 from datetime import date
 from functions import h1_basic_sand_percent
 
-time.sleep(60*60*7.6)
+time.sleep(60*60*3)
 #Takes about 35-45 min per eq
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff"
-export_folder_path = r'C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff'
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 04"
+export_folder_path = input_folder_path
+folder_list = ['soil_parameters_2010_A04', 'soil_parameters_2011_A04', 'soil_parameters_2016_A04']
+attempt_number = 'A04'
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
-
-folder_list = ['2010_soil_parameters_final', '2011_soil_parameters_final', '2016_soil_parameters_final']
 
 for folder in folder_list:
     sites = []
@@ -69,7 +69,7 @@ for folder in folder_list:
         indx_counter += 1
         loop.update(1)
         if indx_counter == 30:
-            liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_final_{folder}_{date}.xlsx', index=False)
+            liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_{attempt_number}_{folder}.xlsx', index=False)
     loop.close()
 
-    liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_final_{folder}_{date}.xlsx', index=False)
+    liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_NZ_{attempt_number}_{folder}.xlsx', index=False)

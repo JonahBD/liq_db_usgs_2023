@@ -62,6 +62,7 @@ LD_not_working = []
 ################ USER INPUTS ############################
 export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data"
 depth_column_name = "Depth (m)"
+attempt_number = 'A04'
 #########################################################
 
 sites = []
@@ -106,7 +107,7 @@ for index, row in full_df.iterrows():
             df.at[0, "Liquefaction"] = 1
         else:
             df.at[0, "Liquefaction"] = 0
-        df.to_excel(f'{export_folder_path}/eq_{eq_dates[n]}_final/{site}.xlsx', index=False)
+        df.to_excel(f'{export_folder_path}/eq_{eq_dates[n]}_{attempt_number}/{site}.xlsx', index=False)
 
     loop.update(1)
 loop.close()

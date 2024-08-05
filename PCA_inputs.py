@@ -9,13 +9,14 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-time.sleep(60*60*5.2)
+time.sleep(60*60*9)
 
 ################ USER INPUTS ############################
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\Soil Parameters (lower PGA) 05 20 24"
 export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update"
 depth_column_name = "Depth (m)"
-name_of_export_file = 'log_reg_parameters_all_sites'
+name = 'OG'
+attempt_number = "A03"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -37,7 +38,6 @@ loop = tqdm(total=len(sites), colour="#c6e2ff")
 
 counter = 0
 pca_parameters_df = pd.DataFrame()
-
 
 for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     site = os.path.basename(filename).rstrip(".xls")
@@ -109,10 +109,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         pca_parameters_df.at[counter, str(col)] = df.loc[0, str(col)]
 
     if counter == 30:
-        pca_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file} {date}.xlsx', index=False)
+        pca_parameters_df.to_excel(f'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}.xlsx', index=False)
 
     counter += 1
     loop.update(1)
 loop.close()
 
-pca_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file} {date}.xlsx', index=False)
+pca_parameters_df.to_excel(f'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}.xlsx', index=False)

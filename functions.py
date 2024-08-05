@@ -232,7 +232,7 @@ def soil_parameters(df, site):
 
     df['OCR R'] = [calcOCR_R(x, y) for x, y in zip(df['Ic'], df['Qt'])]
 
-    # Kulkawy and Mayne 1990
+    # Kulhawy and Mayne 1990
     def calcOCR_K(Ic, Qt):
         k = 0.33  # An average value of k = 0.33 can be assumed, with an expected range of 0.2 to 0.5. Higher values of k are recommended in aged, heavily overconsolidated clays.
         if Ic >= 2.6 and Qt < 20:
@@ -480,9 +480,9 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
                         1 / .264)  # from Dr I iterative calc (we backcalculate here)
         row = df.loc[i]
 
-        FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
-        # FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
-        FC =  #Christchurch specific FC equation from Maurer et al 2019 Development of region-specific soil behavior type index correlations for evaluating liquefaction hazard in Christchurch, New Zealand
+        # FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
+        FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
+        # FC = 80.645 * row['Ic'] - 128.5967 #Christchurch specific FC equation from Maurer et al 2019 Development of region-specific soil behavior type index correlations for evaluating liquefaction hazard in Christchurch, New Zealand
         if FC > 100:
             FC = 100
         elif FC < 0:

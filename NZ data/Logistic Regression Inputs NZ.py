@@ -9,13 +9,15 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-time.sleep(60*60*7.6)
+time.sleep(60*60*3)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff"
-export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data\LSN 10 stuff"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 04"
+export_folder_path = input_folder_path
 depth_column_name = "Depth (m)"
-name_of_export_file = 'log_reg_parameters_all_sites'
+name_of_export_file = 'log_reg_parameters'
+# attempt_number = "A04"
+folder_list = ['soil_parameters_2010_A04', 'soil_parameters_2011_A04', 'soil_parameters_2016_A04']
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -27,7 +29,6 @@ log_reg_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M
                      "φ' R",
                      "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
 
-folder_list = ['2010_soil_param', '2011_soil_parameter', '2016_soil_parameters']
 
 for folder in folder_list:
     sites = []
@@ -111,10 +112,10 @@ for folder in folder_list:
             log_reg_parameters_df.at[counter, str(col)] = df.loc[0, str(col)]
     
         if counter == 30:
-            log_reg_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file}_{folder} {date}.xlsx', index=False)
+            log_reg_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file}_{folder}.xlsx', index=False)
     
         counter += 1
         loop.update(1)
     loop.close()
     
-    log_reg_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file}_{folder} {date}.xlsx', index=False)
+    log_reg_parameters_df.to_excel(f'{export_folder_path}\{name_of_export_file}_{folder}.xlsx', index=False)

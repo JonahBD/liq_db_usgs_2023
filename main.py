@@ -12,6 +12,9 @@ import numpy as np
 import glob, os
 from datetime import datetime
 from tqdm import tqdm
+import time
+
+time.sleep(60*60*3)
 
 missing_pga = []
 preforo_below_GWT = []
