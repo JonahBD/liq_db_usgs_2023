@@ -587,6 +587,22 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
                 h1_thickness = df.loc[h1_index][depth_column_name]
                 break
 
+    thick_no_liq = 0
+    old_h2 = h2_thickness
+    if h2_thickness > 0:
+        for i in range(h1_index):
+            index = h1_index - i
+            if index == 0:
+                break
+            if thick_no_liq >= 0.15:
+                h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
+                h2_thickness = last_liq_depth - h1_thickness
+                break
+            if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
+                thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
+            else:
+                thick_no_liq = 0
+
     h1_column_name = "h1_basic"
     h2_columnn_name = "h2_basic"
     df.at[0, h1_column_name] = h1_thickness
@@ -656,6 +672,21 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
                 h2_thickness += depth - df.loc[index - 1][depth_column_name]
         if depth > 10:
             break
+
+    thick_no_liq = 0
+    old_h2 = h2_thickness
+    if h1_thickness < 10:
+        for i in range(h1_index):
+            index = h1_index - i
+            if index == 0:
+                break
+            if thick_no_liq >= 0.15:
+                h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
+                break
+            if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
+                thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
+            else:
+                thick_no_liq = 0
 
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
