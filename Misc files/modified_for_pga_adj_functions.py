@@ -531,7 +531,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
 
             row = df.loc[i]
 
-            # Calcuatig CRR # NOTE: When qc1ncs is greater than about 250 it will throw an overflow error and generates inf values (ex. 036010P218CPTU218)
+            # Calcuatig CRR # NOTE: When qc1ncs is greater than about 250 it will throw an overflow error and generates infinity values (ex. 036010P218CPTU218)
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message="overflow encountered in exp")
                 df.at[i, "CRR"] = np.exp(qc1ncs / 540 + (qc1ncs / 67) ** 2 - (qc1ncs / 80) ** 3 + (qc1ncs / 114) ** 4 - 3) #/ MSF1 / row["Kσ"]
@@ -591,6 +591,22 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
                 h2_thickness = last_liq_depth - start_liq_depth
                 h1_thickness = df.loc[h1_index][depth_column_name]
                 break
+
+    thick_no_liq = 0
+    old_h2 = h2_thickness
+    if h2_thickness > 0:
+        for i in range(h1_index):
+            index = h1_index - i
+            if index == 0:
+                break
+            if thick_no_liq >= 0.15:
+                h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
+                h2_thickness = last_liq_depth - h1_thickness
+                break
+            if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
+                thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
+            else:
+                thick_no_liq = 0
 
     h1_column_name = "h1_basic"
     h2_columnn_name = "h2_basic"
@@ -661,6 +677,21 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
                 h2_thickness += depth - df.loc[index - 1][depth_column_name]
         if depth > 10:
             break
+
+    thick_no_liq = 0
+    old_h2 = h2_thickness
+    if h1_thickness < 10:
+        for i in range(h1_index):
+            index = h1_index - i
+            if index == 0:
+                break
+            if thick_no_liq >= 0.15:
+                h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
+                break
+            if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
+                thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
+            else:
+                thick_no_liq = 0
 
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
@@ -854,7 +885,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         df.at[i,'eps'] = eps
 
     # LSN found in Maurer 2015 calibrating LSN paper
-    if LSN < 20:
+    if LSN < 10:
         result = "Little to no manifestation of liquefaction expected"
         binary = 0
     elif LSN < 40:
@@ -1105,7 +1136,14 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
 def h1_basic_sand_percent(df, depth_column_name):
     h1_depth = df.loc[0, 'h1_basic']
     depths = df[depth_column_name].to_numpy()
-    h1_index = int(np.where(depths == h1_depth)[0][0])
+
+    try:
+        h1_index = int(np.where(depths == h1_depth)[0][0])
+    except IndexError:
+        h1_depth = round(df.loc[0, 'h1_basic'], 10)
+        h1_index = int(np.where(depths == h1_depth)[0][0])
+        print("h1 was weird when calculating h1 sand percent on this site")
+
     Ic = df['Ic'].to_numpy()
     Ic = Ic[0:h1_index]
     Ic = Ic[~pd.isna(Ic)]

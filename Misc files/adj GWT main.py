@@ -2,6 +2,9 @@ from modified_for_pga_adj_functions import *
 import pandas as pd
 import glob, os
 from tqdm import tqdm
+import time
+
+# time.sleep(60*60*12)
 
 missing_pga = []
 preforo_below_GWT = []

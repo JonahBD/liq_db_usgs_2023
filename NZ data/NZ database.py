@@ -59,6 +59,7 @@ GWT_or_preforo_wrong_type = []
 GWT_zero_nan = []
 LD_not_working = []
 
+#takes about an hour and 10 minutes to run
 ################ USER INPUTS ############################
 export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\NZ data"
 depth_column_name = "Depth (m)"
@@ -98,8 +99,8 @@ for index, row in full_df.iterrows():
         df.at[1, 'EQ'] = row['Magnitude'][n]
         df.at[0,'GWT [m]'] = row['GWT'][n]
         df.at[0, 'PGA'] = row['PGA'][n]
-        if df[depth_column_name].iloc[-1] < 20: #NOTE: This limits any files to a depth of greater than 20 m
-            continue
+        # if df[depth_column_name].iloc[-1] < 20: #NOTE: This limits any files to a depth of greater than 20 m
+        #     continue
         if row['Manifestation'][n] == 10 or row['Manifestation'][n] == 4 or row['Manifestation'][n] == 5: #NOTE: this will change how many sites get used for each EQ
             continue
             #https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-2937%2FData%20Paper%20Manuscript.pdf

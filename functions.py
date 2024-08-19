@@ -480,8 +480,8 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
                         1 / .264)  # from Dr I iterative calc (we backcalculate here)
         row = df.loc[i]
 
-        # FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
-        FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
+        FC = 2 * 2.8 * row["Ic"] ** 2.6  # Taken from Emilia Romagna paper #TODO: change this back hoe if using Italy data
+        # FC = 2.8 * row["Ic"] ** 2.6 #Normal I&B
         # FC = 80.645 * row['Ic'] - 128.5967 #Christchurch specific FC equation from Maurer et al 2019 Development of region-specific soil behavior type index correlations for evaluating liquefaction hazard in Christchurch, New Zealand
         if FC > 100:
             FC = 100
@@ -1126,9 +1126,16 @@ def preforo_check(df, GWT_column_name, preforo_column_name):
     return preforo_check
 
 def h1_basic_sand_percent(df, depth_column_name):
-    h1_depth = df.loc[0, 'h1_basic']
+
+    h1_depth = (df.loc[0, 'h1_basic'])
     depths = df[depth_column_name].to_numpy()
-    h1_index = int(np.where(depths == h1_depth)[0][0])
+
+    try:
+        h1_index = int(np.where(depths == h1_depth)[0][0])
+    except IndexError:
+        h1_depth = round(df.loc[0, 'h1_basic'], 10)
+        h1_index = int(np.where(depths == h1_depth)[0][0])
+        print("h1 was weird when calculating h1 sand percent on this site")
     Ic = df['Ic'].to_numpy()
     Ic = Ic[0:h1_index]
     Ic = Ic[~pd.isna(Ic)]

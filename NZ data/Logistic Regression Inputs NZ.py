@@ -16,8 +16,8 @@ input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\
 export_folder_path = input_folder_path
 depth_column_name = "Depth (m)"
 name_of_export_file = 'log_reg_parameters'
-# attempt_number = "A04"
-folder_list = ['soil_parameters_2010_A04', 'soil_parameters_2011_A04', 'soil_parameters_2016_A04']
+attempt_number = "A06"
+folder_list = [f'soil_parameters_2010_{attempt_number}', f'soil_parameters_2011_{attempt_number}', f'soil_parameters_2016_{attempt_number}']
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
