@@ -23,7 +23,7 @@ date = f'{today_date.month}-{today_date.day}'
 
 pca_site_parameters_col = ['Liquefaction', 'LSN', 'LPIish_basic',
                           'LPIish_cumulative', 'LPI', 'h2_basic',
-                          'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb'] #'Liquefaction_italy',
+                          'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb', 'clay_profile','exclude'] #'Liquefaction_italy',
 pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs',
                      "φ' R",
                      "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
@@ -47,9 +47,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         continue
 
     df = pd.read_excel(filename)
-    if df.loc[0, 'clay_profile'] == 1:
-        loop.update(1)
-        continue
+    # if df.loc[0, 'exclude'] == 1:
+    #     loop.update(1)
+    #     continue
 
     pca_parameters_df.at[counter, 'site'] = site
     h1_depth = df.loc[0, 'h1_basic']

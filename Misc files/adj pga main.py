@@ -125,6 +125,11 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         else:
             df.at[0, 'stratified'] = 1
 
+        if df.loc[0]['clay_profile'] == 1 and df.loc[0]['Liquefaction'] == 0:
+            df.at[0, 'exclude'] = 1
+        else:
+            df.at[0, 'exclude'] = 0
+
 
         pga = df.loc[0]['PGA']
         pga_increase_incriment = .05
@@ -152,7 +157,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
                      f'towhata_basic', f'towhata_cumulative', "LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR',
                      'za', 'zb',
                      "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA', "EQ",
-                     'Liquefaction', 'clay_profile', 'stratified', 'h1b_sand_percent',
+                     'Liquefaction', 'clay_profile','exclude', 'stratified', 'h1b_sand_percent',
                      'ishihara_curve_basic_results', 'ishihara_curve_cumulative_results', f'towhata_basic_results',
                      f'towhata_cumulative_results', f'LSN_results', f'LPIish_basic_results',
                      f'LPIish_cumulative_results',

@@ -33,7 +33,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = pd.read_excel(filename)
 
-    site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'stratified', 'clay_profile', 'h1b_sand_percent',
+    site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'stratified', 'clay_profile','exclude', 'h1b_sand_percent',
                             'h1_basic', 'h1_cumulative', 'h2_basic', 'h2_cumulative', 'methods_perform', 'za', 'zb','LD', 'CR']
 
     methods = ['LPI', 'towhata_basic', 'towhata_cumulative', 'LPIish_basic', 'LPIish_cumulative', 'LSN',
@@ -62,7 +62,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     indx_counter += 1
     loop.update(1)
-    if indx_counter == 30:
+    if indx_counter == 10:
         liq_df.to_excel(f'{export_folder_path}\liq_param_compiled_{name}_{attempt_number}.xlsx', index=False)
 loop.close()
 

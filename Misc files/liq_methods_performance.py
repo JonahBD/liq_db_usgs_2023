@@ -18,11 +18,11 @@ date = f'{today_date.month}-{today_date.day}'
 df = pd.read_excel(input_file_path)
 results = pd.DataFrame()
 
-for index, row in df.iterrows():
-    if row['clay_profile'] == 1 and row['Liquefaction'] == 0:
-        df.at[index, 'exclude'] = 1
-    else:
-        df.at[index, 'exclude'] = 0
+# for index, row in df.iterrows():
+#     if row['clay_profile'] == 1 and row['Liquefaction'] == 0:
+#         df.at[index, 'exclude'] = 1
+#     else:
+#         df.at[index, 'exclude'] = 0
 
 if exclude_clay_sites:
     df = df[df['exclude'] == 0]

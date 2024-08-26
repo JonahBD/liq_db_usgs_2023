@@ -14,7 +14,7 @@ from datetime import datetime
 from tqdm import tqdm
 import time
 
-time.sleep(60*60*3)
+# time.sleep(60*60*3)
 
 missing_pga = []
 preforo_below_GWT = []
@@ -121,6 +121,11 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     else:
         df.at[0, 'stratified'] = 1
 
+    if df.loc[0]['clay_profile'] == 1 and df.loc[0]['Liquefaction'] == 0:
+        df.at[0, 'exclude'] = 1
+    else:
+        df.at[0, 'exclude'] = 0
+
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
              "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
@@ -129,7 +134,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
              "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
-             'clay_profile', 'stratified', 'h1b_sand_percent', 'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
+             'clay_profile','exclude', 'stratified', 'h1b_sand_percent', 'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
              f'towhata_cumulative_results',f'LSN_results', f'LPIish_basic_results', f'LPIish_cumulative_results',
              'LD_and_CR_results', 'LD_and_CR_binary_results', f'LPI_results', 'methods_perform']]
 
