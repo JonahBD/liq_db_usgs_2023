@@ -51,7 +51,7 @@ for m in methods:
 
     # plt.figure()
     plt.plot(fpr, tpr, lw=2,color= m["color"], label=f'{m["label"]} AUC = %0.2f' % roc_auc) #, color='darkorange'
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label= "Random Guess")
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label= "Random Guess AUC = 0.5")
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')

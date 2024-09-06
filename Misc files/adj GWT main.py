@@ -133,6 +133,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
 
         gwt = df.loc[0]['GWT [m]']
+        if gwt == 0:
+            gwt = 0.1
         gwt_increase_increment = .05
         # total = lpi + tow_c + tow_b + lpiish_c + lpiish_b + lsn + ish_c + ish_b + ld_cr
         # print(f'total: {total}')
@@ -176,13 +178,13 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
             continue
 
         if df.loc[0]['Liquefaction'] == 1:
-            if ld_cr == 1 and lpi == 1:
+            if lpi == 1:
                 keep_going = False
             else:
                 gwt = gwt * (1 - gwt_increase_increment)
                 counter += 1
         else:
-            if ld_cr == 0 and lpi == 0:
+            if lpi == 0:
                 keep_going = False
             else:
                 gwt = gwt * (gwt_increase_increment + 1)

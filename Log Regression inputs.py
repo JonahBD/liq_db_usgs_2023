@@ -109,10 +109,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         pca_parameters_df.at[counter, str(col)] = df.loc[0, str(col)]
 
     if counter == 30:
-        pca_parameters_df.to_excel(f'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}.xlsx', index=False)
+        pca_parameters_df.to_excel(fr'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}_first30.xlsx', index=False)
 
     counter += 1
     loop.update(1)
 loop.close()
 
-pca_parameters_df.to_excel(f'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}.xlsx', index=False)
+pca_parameters_df.to_excel(fr'{export_folder_path}\log_reg_parameters_{name}_{attempt_number}.xlsx', index=False)

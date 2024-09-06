@@ -10,4 +10,5 @@ for col in columns:
             df.drop(columns=col, axis=1, inplace=True)
 
 new_name = import_file.rstrip(".xls")
-df.to_excel(f'{new_name}_some_col_excluded.xlsx', index=False)
+# df.to_excel(f'{new_name}_some_col_excluded.xlsx', index=False)
+df.to_excel(import_file, index=False)
