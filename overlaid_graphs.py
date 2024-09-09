@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 import math
 import os, glob
 
-our_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\soil parameters"
-cliq_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Cliq settings changed\graphs2"
+our_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Italy Code Validation\Cliq settings changed\soil parameters 02 (08 23)"
+cliq_data_folder = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Italy Code Validation\Cliq settings changed"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Italy Code Validation\Cliq settings changed\graphs 03"
 
 for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     our_data = pd.read_excel(file)
     filename = os.path.basename(file).rstrip('.xls')
     try:
-        cliq_data = pd.read_excel(f'{cliq_data_folder}\{filename}.xls')
+        cliq_data = pd.read_excel(f"{cliq_data_folder}\{filename}.xls")
     except OSError:
         cliq_data = pd.read_excel(f'{cliq_data_folder}\{filename}.xlsx')
     file_folder_path = f"{export_folder_path}\{filename}"
@@ -74,7 +74,7 @@ for file in glob.glob(os.path.join(our_data_folder, "*.xls*")):
     qt = np.array(our_data[our_data.columns[4]])
 
     our_columns = [qc, fs, total_stress, effective_stress, CSR, k_sigma, Ic, qc1N, qc1Ncs, CRR, FS, rd, strain, qt]
-    column_names = ['qc', 'fs (%)', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'qc1N', 'qc1Ncs', 'CRR', 'FS', 'rd', 'eps', 'qt']
+    column_names = ['qc', 'fs (%)', 'total_stress', 'effective_stress', 'CSR', 'k_sigma', 'Ic', 'qc1N', 'qc1Ncs', 'CRR', 'Factor of Safety', 'Shear Stress Reduction Coefficient', 'Volumetric Strain (%)', 'qt']
     cliq_columns = [c_qc, c_fs, c_total_stress, c_effective_stress, c_CSR, c_k_sigma, c_Ic, c_qc1N, c_qc1Ncs, c_CRR, c_FS, c_rd, c_strain, c_qt]
     counter = 0
 

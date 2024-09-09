@@ -9,11 +9,11 @@ def soil_parameters(df, site):
 
     # /////////////////////////////////////////////// COLUMNS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     # Add new columns for each of the soil parameters
-    new_columns = ['u calc', 'qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
+    new_columns = ['u calc (kPa)', 'qc calc', 'qt calc', 'Qt', "Rf (%)", "Gamma (kN/m^3)", "Total Stress (kPa)",
                    "Effective Stress (kPa)",
-                   "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq", "cu_14", "M", "k0_1",
-                   'k0_2', "Vs R",
-                   'Vs M', "k (m/s)", 'ψ', "φ' R", "φ' K", "φ' J", 'Qtn,cs', "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J',
+                   "Fr (%)", 'n1', "Cn", "Qtn", "Ic", 'n2', 'error', 'OCR R', 'OCR K', "cu_bq (kPa) (kPa)", "cu_14 (kPa)", "M (kPa)", "k0_1",
+                   'k0_2', "Vs R (m/s)",
+                   'Vs M (m/s)', "k (m/s)", 'ψ', "φ' R (degrees)", "φ' K (degrees)", "φ' J (degrees)", 'Qtn,cs', "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J',
                    'Dr I',
                    'Cn2', "qc1", 'qc2', 'error2']
     df_new_columns = pd.DataFrame(columns=new_columns)
@@ -76,13 +76,13 @@ def soil_parameters(df, site):
         GWT = df.loc[0]['GWT [m]']
         df['Effective Stress (kPa)'] = df['Total Stress (kPa)']
 
-        df['u calc'] = 0
+        df['u calc (kPa)'] = 0
 
         for i in range(len(df.index)):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-                df.at[i, 'u calc'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
+                df.at[i, 'u calc (kPa)'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
                 # print(type(row["u (kPa)"]), type(row["u (kPa)"]))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
@@ -94,13 +94,13 @@ def soil_parameters(df, site):
         GWT = df.loc[0]['GWT [m]']
         df['Effective Stress (kPa)'] = df['Total Stress (kPa)']
 
-        df['u calc'] = 0
+        df['u calc (kPa)'] = 0
 
         for i in range(len(df.index)):
             row = df.loc[i]
             if row['Depth (m)'] >= GWT:
                 df.at[i, 'Effective Stress (kPa)'] = row['Total Stress (kPa)'] - ((row['Depth (m)'] - GWT) * 9.81)
-                df.at[i, 'u calc'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
+                df.at[i, 'u calc (kPa)'] = ((row['Depth (m)'] - GWT) * 9.81).astype(np.int64)
                 # print(type(row["u (kPa)"]), type(row["u (kPa)"]))
             # Fr calcuation
             if row['fs (kPa)'] <= 0:
@@ -168,7 +168,7 @@ def soil_parameters(df, site):
     # df['qc1n'] = df['Cn'] * df['qc calc'] / Pa
     # df['Dr I'] = 0.478 * df['qc1n']**0.264 - 1.063
 
-    # df['FC'] = 2 * 2.8 * df["Ic"] ** 2.6  # Taken from Emilia Romagna paper
+    # df['Fines Content (%)'] = 2 * 2.8 * df["Ic"] ** 2.6  # Taken from Emilia Romagna paper
     # Ic = df['Ic']
     # df['Kc'] = 5.581 * Ic**3 - 0.403 * Ic**4 - 21.63 * Ic**2 + 33.75 * Ic - 17.88
     # df['Kc'] = [1 if x <= 1.64 else y for x, y in zip(df['Ic'], df['Kc'])]
@@ -260,12 +260,12 @@ def soil_parameters(df, site):
                 u0 = (row['Depth (m)'] - GWT) * 9.81
             else:
                 u0 = 0
-            Bq = (row['u calc'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
+            Bq = (row['u calc (kPa)'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
             if Bq <= -0.1:
                 Bq = -0.009999999
             Nkt = 10.5 - 4.6 * np.log(Bq + 0.1)
-            df.at[i, 'cu_bq'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
-            df.at[i, 'cu_14'] = (row['qt calc'] - row[
+            df.at[i, 'cu_bq (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+            df.at[i, 'cu_14 (kPa)'] = (row['qt calc'] - row[
                 'Total Stress (kPa)']) / 14  # Dr. Rollins wanted to use a set value of Nkt = 14 in addition to the bq calc since he is unfamiliar with bq
 
             #from Hutabarat and Bray 2022 method to calculate CR and LD
@@ -275,17 +275,17 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # -------------------------- end cu calculations -----------------------------------------------------------
 
             # ----------------------------- M calculations -------------------------------------------------------------
             # Robertson 2009. From what I can tell from the paper, M is in MPa
             if row['Qt'] >= 14:
-                df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
+                df.at[i, 'M (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
             else:
-                df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
+                df.at[i, 'M (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
             # ------------------------------- end M calculations -------------------------------------------------------
 
             # -------------------------------k0 calculations -----------------------------------------------------------
@@ -298,11 +298,11 @@ def soil_parameters(df, site):
             # Robertson 2009
             avs = 10 ** (0.55 * row['Ic'] + 1.68)
             if (avs * (row['qt calc'] - row['Total Stress (kPa)'])) > 0:
-                df.at[i, 'Vs R'] = (avs * (row['qt calc'] - row['Total Stress (kPa)']) / Pa) ** .5
+                df.at[i, 'Vs R (m/s)'] = (avs * (row['qt calc'] - row['Total Stress (kPa)']) / Pa) ** .5
 
             # Mayne 2006
             if row['fs (kPa)'] > 0:
-                df.at[i, 'Vs M'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
+                df.at[i, 'Vs M (m/s)'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
             # ---------------------------------end Vs calculation ------------------------------------------------------
 
             # --------------------------------k for permeability -------------------------------------------------------            # Robertson 2010 found in Gregg CPT guide 2015 and 2022
@@ -319,13 +319,13 @@ def soil_parameters(df, site):
                 u0 = (row['Depth (m)'] - GWT) * 9.81
             else:
                 u0 = 0
-            Bq = (row['u calc'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
+            Bq = (row['u calc (kPa)'] - u0) / (row['qt calc'] - row['Total Stress (kPa)'])
             if Bq <= 0:
                 Bq = 0.1
             elif Bq > 1:
                 Bq = 1
             if row['Qt'] > 0:
-                df.at[i, "φ' M"] = 29.5 * Bq ** 0.121 * (0.256 + 0.336 * Bq + np.log10(row['Qt']))
+                df.at[i, "φ' M (degrees)"] = 29.5 * Bq ** 0.121 * (0.256 + 0.336 * Bq + np.log10(row['Qt']))
             # ----------------------------- end φ' calculation ---------------------------------------------------------
     # /////////////////////////////////////// end COHESIVE LAYER PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -338,11 +338,11 @@ def soil_parameters(df, site):
             # ---------------------------------------- φ' calculation --------------------------------------------------
             # Robertson and Campanella 1983
             if row['qc calc'] > 0:
-                df.at[i, "φ' R"] = np.degrees(
+                df.at[i, "φ' R (degrees)"] = np.degrees(
                     np.arctan(1 / 2.68 * (np.log10(row['qc calc'] / row['Effective Stress (kPa)']) + 0.29)))
 
             # Kulhawy and Mayne 1990
-            df.at[i, "φ' K"] = 17.6 + 11 * np.log10(row['Qtn'])
+            df.at[i, "φ' K (degrees)"] = 17.6 + 11 * np.log10(row['Qtn'])
 
             # Jefferies and Been 2006
             if row['Ic'] <= 1.64:
@@ -354,13 +354,13 @@ def soil_parameters(df, site):
                     row["Ic"]) - 17.88
             else:
                 Kc = 6 * 10 ** -7 * row['Ic'] ** 16.76
-            df.at[i, "φ' J"] = 33 + 15.84 * (
+            df.at[i, "φ' J (degrees)"] = 33 + 15.84 * (
                 np.log10(Kc * row['Qtn'])) - 26.88  # Used a φ'cv value of 33 degrees per Dr. Rollins' instructions
 
             # df.at[i, 'Qtn,cs'] = Kc * row['Qtn'] -------- if we want to check Qtn,cs values for checking here you go
 
             # Uzielli, Mayne, and Cassidy 2013
-            df.at[i, "φ' U"] = 25 * (row['qt calc'] / (row['Effective Stress (kPa)']) ** 0.5) ** 0.1
+            df.at[i, "φ' U (degrees)"] = 25 * (row['qt calc'] / (row['Effective Stress (kPa)']) ** 0.5) ** 0.1
             # ------------------------------------- end φ' calculation -------------------------------------------------
 
             # ------------------------------------------- DR calculation -----------------------------------------------
@@ -390,11 +390,11 @@ def soil_parameters(df, site):
             # ------------------------------------- Vs calculation -----------------------------------------------------
             # Robertson 2009
             avs = 10 ** (0.55 * row['Ic'] + 1.68)
-            df.at[i, 'Vs R'] = (avs * (row['qt calc'] - row['Total Stress (kPa)']) / Pa) ** 0.5
+            df.at[i, 'Vs R (m/s)'] = (avs * (row['qt calc'] - row['Total Stress (kPa)']) / Pa) ** 0.5
 
             # Mayne 2006
             if row['fs (kPa)'] > 0:
-                df.at[i, 'Vs M'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
+                df.at[i, 'Vs M (m/s)'] = 51.6 * np.log(row['fs (kPa)']) + 18.5
             # ------------------------------------- end Vs calculation -------------------------------------------------
 
             # --------------------------------- k for permeability -----------------------------------------------------
@@ -406,12 +406,12 @@ def soil_parameters(df, site):
             # Robertson 2009. From what I can tell from the paper, M is in MPa
             if row['Ic'] > 2.2:
                 if row['Qt'] >= 14:
-                    df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
+                    df.at[i, 'M (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) * 14
                 else:
-                    df.at[i, 'M'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
+                    df.at[i, 'M (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) * row['Qt']
             else:
                 am = 0.0188 * (10 ** (0.55 * row['Ic'] + 1.68))
-                df.at[i, 'M'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
+                df.at[i, 'M (kPa)'] = am * (row['qt calc'] - row['Total Stress (kPa)'])
             # ------------------------------------- end M --------------------------------------------------------------
 
             # ------------------------------------- su -----------------------------------------------------------------
@@ -421,9 +421,9 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # ------------------------------------- end su -------------------------------------------------------------
         elif row['Ic'] == 0:
             df.at[i, 'Ic'] = float('NaN')
@@ -465,7 +465,7 @@ def PGA_insertion(df, PGA_filepath, site):
 def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
     Pa = 101.325
     magnitude = df.loc[1,"EQ"]
-    new_columns = ['qc1n', 'qc1ncs', 'Kσ', 'rd', "CRR", "CSR", "FS"]
+    new_columns = ['qc1n', 'qc1ncs', 'Kσ', 'Shear Stress Reduction Coefficient', "CRR", "CSR", "Factor of Safety"]
     df_new_columns = pd.DataFrame(columns=new_columns)
     df = pd.concat([df, df_new_columns], axis=1)
 
@@ -492,7 +492,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
             FC = 100
         elif FC < 0:
             FC = 0
-        df.at[i, 'FC'] = FC
+        df.at[i, 'Fines Content (%)'] = FC
 
         qc1ncs = row["qc1n"] + (5.4 + row['qc1n'] / 16) * np.exp(
             1.63 + 9.7 / (FC + 0.01) - (15.7 / (FC + 0.01)) ** 2)
@@ -520,14 +520,14 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
                 rd = 0.12 * np.exp(0.22 * magnitude)
             if rd > 1:
                 rd = 1
-            df.at[i, 'rd'] = rd
+            df.at[i, 'Shear Stress Reduction Coefficient'] = rd
 
             row = df.loc[i]
 
             # Calcuating CSR
             g = 1
             df.at[i, "CSR"] = .65 * df.loc[0, "PGA"] / g * row["Total Stress (kPa)"] / row[
-                "Effective Stress (kPa)"] * row["rd"] / MSF / row['Kσ']
+                "Effective Stress (kPa)"] * row["Shear Stress Reduction Coefficient"] / MSF / row['Kσ']
 
             row = df.loc[i]
 
@@ -540,9 +540,9 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
 
             # FS liq
             if row["Depth (m)"] <= df.loc[0]['GWT [m]']:
-                df.at[i, "FS"] = 9999
+                df.at[i, "Factor of Safety"] = 9999
             else:
-                df.at[i, "FS"] = row['CRR'] / row['CSR']
+                df.at[i, "Factor of Safety"] = row['CRR'] / row['CSR']
 
     return df
 
@@ -693,8 +693,8 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
             else:
                 thick_no_liq = 0
 
-    h1_column_name = "h1_cumulative" + FS_column_name.lstrip("FS")
-    h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("FS")
+    h1_column_name = "h1_cumulative" + FS_column_name.lstrip("Factor of Safety")
+    h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("Factor of Safety")
     df.at[0, h1_column_name] = h1_thickness
     df.at[0, h2_columnn_name] = h2_thickness
 
@@ -882,7 +882,7 @@ def LSN(df, depth_column_name, qc1ncs_column_name, FS_column_name, GWT):
         elif not np.isnan(eps):
             LSN += integrate.quad(Integrate_LSN, df.loc[i - 1][depth_column_name], depth)[0]
 
-        df.at[i,'eps'] = eps
+        df.at[i,'Volumetric Strain (%)'] = eps
 
     # LSN found in Maurer 2015 calibrating LSN paper
     if LSN < 10:

@@ -9,14 +9,14 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-time.sleep(60*60*9)
+# time.sleep(60*60*9)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\Soil Parameters (lower PGA) 05 20 24"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data\Soil Parameters"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data"
 depth_column_name = "Depth (m)"
-name = 'OG'
-attempt_number = "A03"
+name = "OG"
+attempt_number = "A06"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -24,9 +24,9 @@ date = f'{today_date.month}-{today_date.day}'
 pca_site_parameters_col = ['Liquefaction', 'LSN', 'LPIish_basic',
                           'LPIish_cumulative', 'LPI', 'h2_basic',
                           'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb', 'clay_profile','exclude'] #'Liquefaction_italy',
-pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq', 'cu_14', 'M', 'Vs R', 'Vs M', 'k (m/s)', 'su_HB', 'FC', 'qc1ncs',
-                     "φ' R",
-                     "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
+pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'su_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
+                     "φ' R (degrees)",
+                     "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
 
 sites = []
 

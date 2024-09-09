@@ -25,9 +25,9 @@ GWT_zero_nan = []
 LD_not_working = []
 #Takes about 5 hours and 10 mintues to run on 2115 files
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Gabrelle update\OG 2-14"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Final Data\Soil Parameters"
-vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\PGA-liq values 02 13 23.xlsx"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Raw Data\OG 2-14"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT\OG Data\Soil Parameters"
+vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -89,8 +89,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = FS_liq(df)
 
-    df = h1_h2_basic(df, depth_column_name, "FS")
-    df = h1_h2_cumulative(df, depth_column_name, "FS")
+    df = h1_h2_basic(df, depth_column_name, "Factor of Safety")
+    df = h1_h2_cumulative(df, depth_column_name, "Factor of Safety")
 
     df = h1_basic_sand_percent(df, depth_column_name)
 
@@ -98,21 +98,21 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     #     loop.update(1)
     #     continue
 
-    df = LPI(df, depth_column_name, "FS")
-    df = LPI(df, depth_column_name, "FS")
+    df = LPI(df, depth_column_name, "Factor of Safety")
+    df = LPI(df, depth_column_name, "Factor of Safety")
 
     df = Towhata_2016(df, "LPI", "h1_basic")
     df = Towhata_2016(df, "LPI", "h1_cumulative")
 
-    df = LPIish(df, depth_column_name, "FS", "h1_basic")
-    df = LPIish(df, depth_column_name, "FS", "h1_cumulative")
+    df = LPIish(df, depth_column_name, "Factor of Safety", "h1_basic")
+    df = LPIish(df, depth_column_name, "Factor of Safety", "h1_cumulative")
 
-    df = LSN(df, depth_column_name, "qc1ncs", "FS", GWT)
+    df = LSN(df, depth_column_name, "qc1ncs", "Factor of Safety", GWT)
 
     df = ishihara_curves(df, 'basic')
     df = ishihara_curves(df, 'cumulative')
 
-    df = LD_and_CR(df, "Ic", depth_column_name, "FS","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
+    df = LD_and_CR(df, "Ic", depth_column_name, "Factor of Safety","Effective Stress (kPa)", "Total Stress (kPa)",'GWT [m]', 'Qtn', 'Fr (%)', 'qt calc')
 
     df = methods_performance_variable(df)
 
@@ -129,9 +129,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
              "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
-             'OCR R', 'OCR K', 'cu_bq', 'cu_14','su_HB', "M", "k0_1", 'k0_2', "Vs R", 'Vs M', "k (m/s)", 'ψ', "φ' R",
-             "φ' K", "φ' J", "φ' M", "φ' U", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc","qc1ncs", f'eps', 'Kσ', 'FC', 'rd', "CSR",
-             "CRR", "FS",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
+             'OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)','su_HB (kPa)', "M (kPa)", "k0_1", 'k0_2', "Vs R (m/s)", 'Vs M (m/s)', "k (m/s)", 'ψ', "φ' R (degrees)",
+             "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc (kPa)","qc1ncs", f'Volumetric Strain (%)', 'Kσ', 'Fines Content (%)', 'Shear Stress Reduction Coefficient', "CSR",
+             "CRR", "Factor of Safety",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',
              "Unnamed: 5", 'GWT [m]', 'Date of CPT [gg/mm/aa]', 'u [si/no]', 'preforo [m]', 'PGA',"EQ",'Liquefaction',
              'clay_profile','exclude', 'stratified', 'h1b_sand_percent', 'ishihara_curve_basic_results','ishihara_curve_cumulative_results', f'towhata_basic_results',
