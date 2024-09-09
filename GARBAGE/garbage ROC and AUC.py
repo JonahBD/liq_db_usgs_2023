@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 
 #################################################################
 # Inputs
-df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 04\liq_param_compiled_NZ_A04_soil_parameters_2016_A04.xlsx")
+df = pd.read_excel(r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 04\OG Data\liq_param_compiled_Italy_A04.xlsx") #Takes in liq_param_compiled file
 columns_of_interest = ['LPI']
 #################################################################
 for method in columns_of_interest:
@@ -87,31 +87,31 @@ for method in columns_of_interest:
     print("Best Youden's J Statistic:", best_youden_j)
 
     #----------------------------------------------------------------------------
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-
-    # Filter the data based on the 'Liquefaction' column
-    # Assuming that 'Liquefaction' contains binary indicators where one value indicates presence
-    # and another value indicates absence of surficial liquefaction
-    liquefaction_present = df[df['Liquefaction'] == 1]  # Assuming 1 indicates presence
-    liquefaction_absent = df[df['Liquefaction'] == 0]  # Assuming 0 indicates absence
-
-    # Plotting the KDE for both categories
-    plt.figure(figsize=(10, 6))
-
-    # KDE plot for cases where liquefaction is present
-    sns.kdeplot(liquefaction_present[method], bw_adjust=0.5, label='Surficial Liquefaction Manifestation', color='black')
-
-    # KDE plot for cases where liquefaction is absent
-    sns.kdeplot(liquefaction_absent[method], bw_adjust=0.5, label='No Surficial Liquefaction Manifestation', color='blue')
-
-    # Add labels and title
-    plt.xlabel(f'{method}')
-    plt.ylabel('Frequency')
-    plt.title(f'Distribution of {method} with respect to Liquefaction Manifestation')
-
-    # Add legend
-    plt.legend()
-
-    # Show the plot
-    plt.show()
+    # import seaborn as sns
+    # import matplotlib.pyplot as plt
+    #
+    # # Filter the data based on the 'Liquefaction' column
+    # # Assuming that 'Liquefaction' contains binary indicators where one value indicates presence
+    # # and another value indicates absence of surficial liquefaction
+    # liquefaction_present = df[df['Liquefaction'] == 1]  # Assuming 1 indicates presence
+    # liquefaction_absent = df[df['Liquefaction'] == 0]  # Assuming 0 indicates absence
+    #
+    # # Plotting the KDE for both categories
+    # plt.figure(figsize=(10, 6))
+    #
+    # # KDE plot for cases where liquefaction is present
+    # sns.kdeplot(liquefaction_present[method], bw_adjust=0.5, label='Surficial Liquefaction Manifestation', color='black')
+    #
+    # # KDE plot for cases where liquefaction is absent
+    # sns.kdeplot(liquefaction_absent[method], bw_adjust=0.5, label='No Surficial Liquefaction Manifestation', color='blue')
+    #
+    # # Add labels and title
+    # plt.xlabel(f'{method}')
+    # plt.ylabel('Frequency')
+    # plt.title(f'Distribution of {method} with respect to Liquefaction Manifestation')
+    #
+    # # Add legend
+    # plt.legend()
+    #
+    # # Show the plot
+    # plt.show()
