@@ -3,7 +3,8 @@ import pandas as pd
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
-df = pd.read_excel(r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 04\OG Data\liq_param_compiled_Italy_A04.xlsx") #Takes in liq_param_compiled file
+df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 07 - OG\OG Data\liq_param_compiled_vs_method.xlsx"
+                   ) #Takes in liq_param_compiled file
 methods = [
     {
         'column': 'LPI',
@@ -22,11 +23,11 @@ methods = [
     {
         'column': 'LD_and_CR_binary_results',
         'label': 'Hutabarat and Bray',
-        "color": '#FFA500'
+        "color": '#20b2aa'
     },{
         'column': 'ishihara_curve_basic_results',
         'label': "Ishihara Basic",
-        "color":'#800080'
+        "color":'#ff55fc'
     },{
         'column': 'ishihara_curve_cumulative_results',
         'label': "Ishihara Cumulative",
@@ -35,6 +36,11 @@ methods = [
         'column': 'towhata_basic_results',
         'label': "Towhata",
         "color":'k'
+    }
+    ,{
+        'column': 'our_method',
+        'label': "LϕI",
+        "color":'#ffaa00'
     }
 
         ]
