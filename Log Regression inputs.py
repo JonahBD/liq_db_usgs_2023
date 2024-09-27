@@ -15,8 +15,8 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data\Soil Parameters"
 export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data"
 depth_column_name = "Depth (m)"
-name = "OG"
-attempt_number = "A06"
+name = "OG_more_vals"
+attempt_number = "A07"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -24,9 +24,10 @@ date = f'{today_date.month}-{today_date.day}'
 pca_site_parameters_col = ['Liquefaction', 'LSN', 'LPIish_basic',
                           'LPIish_cumulative', 'LPI', 'h2_basic',
                           'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb', 'clay_profile','exclude'] #'Liquefaction_italy',
-pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'su_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
+pca_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'cu_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
                      "φ' R (degrees)",
-                     "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
+                     "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)',
+                      'CSR', "CRR", "Volumetric Strain (%)", 'k0_1', 'k0_2', 'ψ', 'Factor of Safety'] #
 
 sites = []
 
@@ -89,6 +90,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         for (key, value) in index_dict.items():
             # print(col)
             values = df[col].to_numpy()
+
             if value == h1_index:
                 sliced_values = values[0:h1_index]
                 thickness = h1_thickness
@@ -100,9 +102,21 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
                 H_over_k = np.divide(thickness, sliced_values)
                 H_over_k = H_over_k[np.logical_not(np.isnan(H_over_k))]
                 pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_equivalent"] = h1_depth / (np.sum(H_over_k))
-            pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
-            pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nanmedian(sliced_values)
-            pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
+
+            sliced_values[sliced_values == ''] = np.nan
+
+            if h1_index == h2_index and key=='h2':
+                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nan
+                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nan
+                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nan
+            else:
+                # try:
+                # sliced_values = sliced_values[~np.isnan(sliced_values)]
+                    pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
+                    pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nanmedian(sliced_values)
+                    pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
+                # except TypeError:
+                #     pass
             # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_skew"] = scipy.stats.skew(sliced_values, nan_policy='omit')
 
     for col in pca_site_parameters_col:
