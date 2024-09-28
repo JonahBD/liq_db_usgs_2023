@@ -273,9 +273,9 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'cu_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'cu_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # -------------------------- end cu calculations -----------------------------------------------------------
 
             # ----------------------------- M calculations -------------------------------------------------------------
@@ -419,9 +419,9 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'cu_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'cu_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # ------------------------------------- end su -------------------------------------------------------------
         elif row['Ic'] == 0:
             df.at[i, 'Ic'] = float('NaN')
@@ -440,6 +440,8 @@ def soil_parameters(df, site):
 def PGA_insertion(df, PGA_filepath, site):
     pga_df = pd.read_excel(PGA_filepath)
     pga_df.set_index('site', inplace=True)
+    df.at[0,"lat_wgs84"] = pga_df.loc[site]['lat_wgs84']
+    df.at[0, "lon_wgs84"] = pga_df.loc[site]['lon_wgs84']
     if pga_df.loc[site]['PGA_20may'] > pga_df.loc[site]['PGA_29may']:
         df.at[0, 'PGA'] = pga_df.loc[site]['PGA_20may']
         df.at[0,"EQ"] = "20_may"
@@ -550,16 +552,20 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
     start_liq_depth = None
     thick_liq = 0
     h2_thickness = 0
-    h1_thickness = df.iloc[-1][depth_column_name]
+    max_depth = df.iloc[-1][depth_column_name]
+    h1_thickness = max_depth
 
     # Iterate through the DataFrame
     for index, row in df.iterrows():
         depth = row[depth_column_name]
+        if depth == 26.98:
+            pass
         FS = row[FS_column_name]
         if FS == '':
             FS = float('NaN')
 
         if FS < 1 and start_liq_depth is not None:
+            last_liq_depth = depth
             if thick_liq == 0:
                 if 0 <= index < 2:
                     thick_liq += df.loc[index + 2][depth_column_name] - depth
@@ -567,22 +573,29 @@ def h1_h2_basic(df, depth_column_name, FS_column_name):
                     thick_liq += depth - df.loc[index - 2][depth_column_name]
             else:
                 thick_liq += depth - df.loc[index - 1][depth_column_name]
+            if depth == max_depth and thick_liq > 0.3:
+                h2_thickness = depth - start_liq_depth
+                h1_thickness = df.loc[h1_index][depth_column_name]
+                break
 
-        if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
+        if FS < 1 and start_liq_depth is None: #or depth - last_liq_depth <= 0.3):
             last_liq_depth = depth
-            if start_liq_depth is None:
-                if index == 0:
-                    start_liq_depth = depth
-                    h1_index = 0
-                else:
-                    h1_index = index - 1
-                    start_liq_depth = df.loc[index - 1][depth_column_name]
-        else:
-            if last_liq_depth is not None and thick_liq < 0.3 and depth - last_liq_depth < 0.15:
+            if index == 0:
+                start_liq_depth = depth
+                h1_index = 0
+            else:
+                h1_index = index - 1
+                start_liq_depth = df.loc[index - 1][depth_column_name]
+        if FS > 1 or np.isnan(FS):
+            if depth == max_depth and thick_liq > 0.3:
+                h2_thickness = last_liq_depth - start_liq_depth
+                h1_thickness = df.loc[h1_index][depth_column_name]
+                break
+            if last_liq_depth is not None and thick_liq < 0.3:
                 last_liq_depth = None
                 start_liq_depth = None
                 thick_liq = 0
-            elif last_liq_depth is not None and thick_liq > 0.3:
+            elif last_liq_depth is not None and thick_liq > 0.3 and depth - last_liq_depth >= 0.15:
                 h2_thickness = last_liq_depth - start_liq_depth
                 h1_thickness = df.loc[h1_index][depth_column_name]
                 break
@@ -630,33 +643,35 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
     last_liq_depth = None
     start_liq_depth = None
     h2_thickness = 0
-    h1_thickness = 10
+    h1_thickness = h1_h2_basic(df, depth_column_name, FS_column_name).loc[0]['h1_basic']
+    if h1_thickness > 10:
+        h1_thickness = 10
 
     # Iterate through the DataFrame
-    for index, row in df.iterrows():
-        depth = row[depth_column_name]
-        FS = row[FS_column_name]
-        if FS == '':
-            FS = float('NaN')
-
-        if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
-            last_liq_depth = depth
-            if start_liq_depth is None:
-                if index == 0:
-                    h1_index = 0
-                    start_liq_depth = depth
-                else:
-                    h1_index = index - 1
-                    start_liq_depth = df.loc[index - 1][depth_column_name]
-        else:
-            if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 and depth - last_liq_depth < 0.15:
-                last_liq_depth = None
-                start_liq_depth = None
-            elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
-                h1_thickness = df.loc[h1_index][depth_column_name]
-                if h1_thickness > 10:
-                    h1_thickness = 10
-                break
+    # for index, row in df.iterrows():
+    #     depth = row[depth_column_name]
+    #     FS = row[FS_column_name]
+    #     if FS == '':
+    #         FS = float('NaN')
+    #
+    #     if FS < 1 and (last_liq_depth is None or depth - last_liq_depth <= 0.3):
+    #         last_liq_depth = depth
+    #         if start_liq_depth is None:
+    #             if index == 0:
+    #                 h1_index = 0
+    #                 start_liq_depth = depth
+    #             else:
+    #                 h1_index = index - 1
+    #                 start_liq_depth = df.loc[index - 1][depth_column_name]
+    #     else:
+    #         if last_liq_depth is not None and last_liq_depth - start_liq_depth < 0.3 and depth - last_liq_depth < 0.15:
+    #             last_liq_depth = None
+    #             start_liq_depth = None
+    #         elif last_liq_depth is not None and depth - last_liq_depth > 0.3:
+    #             h1_thickness = df.loc[h1_index][depth_column_name]
+    #             if h1_thickness > 10:
+    #                 h1_thickness = 10
+    #             break
 
     for index, row in df.iterrows():
         depth = row[depth_column_name]
@@ -673,20 +688,20 @@ def h1_h2_cumulative(df, depth_column_name, FS_column_name):
         if depth > 10:
             break
 
-    thick_no_liq = 0
-    old_h2 = h2_thickness
-    if h1_thickness < 10:
-        for i in range(h1_index):
-            index = h1_index - i
-            if index == 0:
-                break
-            if thick_no_liq >= 0.15:
-                h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
-                break
-            if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
-                thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
-            else:
-                thick_no_liq = 0
+    # thick_no_liq = 0
+    # old_h2 = h2_thickness
+    # if h1_thickness < 10:
+    #     for i in range(h1_index):
+    #         index = h1_index - i
+    #         if index == 0:
+    #             break
+    #         if thick_no_liq >= 0.15:
+    #             h1_thickness = df.loc[index][depth_column_name] + thick_no_liq
+    #             break
+    #         if df.loc[index][FS_column_name] > 1 or np.isnan(df.loc[index][FS_column_name]):
+    #             thick_no_liq += df.loc[index][depth_column_name] - df.loc[index - 1][depth_column_name]
+    #         else:
+    #             thick_no_liq = 0
 
     h1_column_name = "h1_cumulative" + FS_column_name.lstrip("Factor of Safety")
     h2_columnn_name = "h2_cumulative" + FS_column_name.lstrip("Factor of Safety")

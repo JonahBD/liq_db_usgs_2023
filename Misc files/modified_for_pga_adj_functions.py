@@ -275,9 +275,9 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'cu_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'cu_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # -------------------------- end cu calculations -----------------------------------------------------------
 
             # ----------------------------- M calculations -------------------------------------------------------------
@@ -421,9 +421,9 @@ def soil_parameters(df, site):
             K0 = 0.5
             phi_cs = 33
             if IB <= 22:
-                df.at[i, 'su_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
+                df.at[i, 'cu_HB (kPa)'] = (row['qt calc'] - row['Total Stress (kPa)']) / Nkt
             else:
-                df.at[i, 'su_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
+                df.at[i, 'cu_HB (kPa)'] = K0 * row['Effective Stress (kPa)'] * np.tan(phi_cs * np.pi / 180)
             # ------------------------------------- end su -------------------------------------------------------------
         elif row['Ic'] == 0:
             df.at[i, 'Ic'] = float('NaN')
