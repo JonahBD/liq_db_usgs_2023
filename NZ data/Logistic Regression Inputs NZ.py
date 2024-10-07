@@ -25,7 +25,7 @@ date = f'{today_date.month}-{today_date.day}'
 log_reg_site_parameters_col = ['Liquefaction', 'LSN', 'LPIish_basic',
                           'LPIish_cumulative', 'LPI', 'h2_basic',
                           'h2_cumulative', 'h1_basic', 'PGA', 'CR', 'LD', 'za', 'zb'] #'Liquefaction_italy',
-log_reg_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'su_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
+log_reg_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'cu_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
                      "φ' R (degrees)",
                      "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic', 'qc1n', 'Effective Stress (kPa)']
 

@@ -40,7 +40,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     else:
         df.at[0, 'exclude'] = 0 # TODO: delete this chunk later. The files i'm currently running don't have an exclude column, but the main.py files have been updated to calculate this there
 
-    site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'stratified', 'clay_profile','exclude', 'h1b_sand_percent',
+    site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'lat_wgs84', 'lon_wgs84', 'stratified', 'clay_profile','exclude', 'h1b_sand_percent',
                             'h1_basic', 'h1_cumulative', 'h2_basic', 'h2_cumulative', 'methods_perform', 'za', 'zb','LD', 'CR']
 
     methods = ['LPI', 'towhata_basic', 'towhata_cumulative', 'LPIish_basic', 'LPIish_cumulative', 'LSN',

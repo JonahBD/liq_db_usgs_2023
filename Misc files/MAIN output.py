@@ -12,11 +12,14 @@ duplicate_cols = [col for col in liq_param_compiled_df.columns if col in log_reg
 log_reg_param_df.drop(columns=duplicate_cols, inplace=True)
 
 merged_df = pd.merge(liq_param_compiled_df, log_reg_param_df, on="site", how="left")
+merged_df.drop(columns=["h1_φ' U (degrees)_median"], inplace=True)
 
 substrings_to_exclude = ['h2', 'std', 'mean', 'results']
 columns_to_include = ['h2_basic', "h2_cumulative"]
 cols_to_remove = [col for col in merged_df if (any(substring in col for substring in substrings_to_exclude) and col not in columns_to_include)]
-cols_to_remove.extend(['stratified', 'clay_profile', 'exclude', 'h1b_sand_percent', 'methods_perform', 'towhata_cumulative', 'h1_thickness', 'sand_percent', 'LPIish_cumulative'])
+# cols_to_remove.extend(['stratified', 'clay_profile', 'exclude', 'h1b_sand_percent', 'methods_perform',
+#                        'towhata_cumulative', 'h1_thickness', 'sand_percent', 'LPIish_cumulative', 'EQ', 'EQ_mag', 'PGA',
+#                        'Liquefaction', 'GWT [m]'])
 merged_df.drop(columns=cols_to_remove, inplace=True)
 # merged_df.rename(columns={'towhata_basic': "towhata", "LPIish_basic": "LPIish"}, inplace=True)
 

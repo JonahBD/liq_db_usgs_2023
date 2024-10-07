@@ -27,7 +27,7 @@ h1_site_parameters_col = ['Liquefaction', 'ishihara_curve_basic_results',
                           'towhata_cumulative_results', 'LSN_results', 'LPIish_basic_results',
                           'LPIish_cumulative_results', 'LD_and_CR_binary_results', 'LPI_results', 'h2_basic',
                           'h2_cumulative'] #'Liquefaction_italy',
-h1_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'su_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
+h1_parameters_col = ['OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)', 'M (kPa)', 'Vs R (m/s)', 'Vs M (m/s)', 'k (m/s)', 'cu_HB (kPa)', 'Fines Content (%)', 'qc1ncs',
                      "φ' R (degrees)",
                      "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'Ic']
 
