@@ -42,7 +42,6 @@ methods = [
         'label': "LϕI",
         "color":'#ffaa00'
     }
-
         ]
          # 'LPIish_basic', 'LSN', 'LD_and_CR_binary_results', 'ishihara_curve_basic_results', 'ishihara_curve_cumulative_results', 'towhata_basic_results']
 # method_results = f'{method}_results'

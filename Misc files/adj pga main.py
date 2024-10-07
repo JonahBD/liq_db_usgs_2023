@@ -2,6 +2,7 @@ from modified_for_pga_adj_functions import *
 import pandas as pd
 import glob, os
 from tqdm import tqdm
+import functions
 
 missing_pga = []
 preforo_below_GWT = []
@@ -99,8 +100,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
         df = FS_liq(df)
 
-        df = h1_h2_basic(df, depth_column_name, "Factor of Safety")
-        df = h1_h2_cumulative(df, depth_column_name, "Factor of Safety")
+        df = functions.h1_h2_basic(df, depth_column_name, "Factor of Safety")
+        df = functions.h1_h2_cumulative(df, depth_column_name, "Factor of Safety")
         df = h1_basic_sand_percent(df, depth_column_name)
 
         df, lpi = LPI(df, depth_column_name, "Factor of Safety")

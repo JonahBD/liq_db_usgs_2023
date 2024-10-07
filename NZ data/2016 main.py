@@ -123,7 +123,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     # Reorder the columns
     df = df[[depth_column_name, 'qc (MPa)', 'fs (kPa)', 'u (kPa)', 'qt (MPa)', "Rf (%)",
              "Gamma (kN/m^3)", "Total Stress (kPa)", "Effective Stress (kPa)", "Fr (%)", "Ic",
-             'OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)','su_HB (kPa)', "M (kPa)", "k0_1", 'k0_2', "Vs R (m/s)", 'Vs M (m/s)', "k (m/s)", 'ψ', "φ' R (degrees)",
+             'OCR R', 'OCR K', 'cu_bq (kPa)', 'cu_14 (kPa)','cu_HB (kPa)', "M (kPa)", "k0_1", 'k0_2', "Vs R (m/s)", 'Vs M (m/s)', "k (m/s)", 'ψ', "φ' R (degrees)",
              "φ' K (degrees)", "φ' J (degrees)", "φ' M (degrees)", "φ' U (degrees)", 'Dr B', 'Dr K', 'Dr J', 'Dr I', 'qc1n',"u calc (kPa)","qc1ncs", f'Volumetric Strain (%)', 'Kσ', 'Fines Content (%)', 'Shear Stress Reduction Coefficient', "CSR",
              "CRR", "Factor of Safety",'h1_basic','h2_basic','h1_cumulative','h2_cumulative', "LPI",
              f'towhata_basic', f'towhata_cumulative',"LPIish_basic", "LPIish_cumulative", 'LSN', 'LD', 'CR', 'za', 'zb',

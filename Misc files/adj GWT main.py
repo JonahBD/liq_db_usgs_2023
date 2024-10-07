@@ -3,6 +3,7 @@ import pandas as pd
 import glob, os
 from tqdm import tqdm
 import time
+import functions
 
 # time.sleep(60*60*12)
 
@@ -106,8 +107,8 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
         df = FS_liq(df)
 
-        df = h1_h2_basic(df, depth_column_name, "Factor of Safety")
-        df = h1_h2_cumulative(df, depth_column_name, "Factor of Safety")
+        df = functions.h1_h2_basic(df, depth_column_name, "Factor of Safety")
+        df = functions.h1_h2_cumulative(df, depth_column_name, "Factor of Safety")
         df = h1_basic_sand_percent(df, depth_column_name)
 
         df, lpi = LPI(df, depth_column_name, "Factor of Safety")

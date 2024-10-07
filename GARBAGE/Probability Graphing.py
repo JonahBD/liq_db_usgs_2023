@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Load data (replace with your actual path)
 df = pd.read_excel(
-    r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Model Building\OG\log_reg_parameters_OG_A05.xlsx")
+    r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\log_reg_parameters_OG_A08_first30.xlsx")
 vars = ["h2_cumulative", "LPI"]
 linear_predictors = [-3.4012429703011, 0.230174481116412, 0.153672176172119]  # Logistic regression coefficients
 

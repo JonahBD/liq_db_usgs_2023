@@ -91,7 +91,7 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
             # print(col)
             values = df[col].to_numpy()
 
-            if value == h1_index:
+            if value == h1_index and key != 'h2':
                 sliced_values = values[0:h1_index]
                 thickness = h1_thickness
             else:

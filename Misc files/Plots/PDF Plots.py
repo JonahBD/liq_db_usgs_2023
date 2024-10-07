@@ -12,7 +12,7 @@ from tqdm import tqdm
 soil_parameters_input_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data\Soil Parameters"
 PDF_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\PDF Plots\Attempt 02"
 depth_column_name = "Depth (m)"
-columns_to_exclude = ['u calc (kPa)']
+columns_to_exclude = ['u calc (kPa)','Volumetric Strain (%)','Kσ', 'rd']
 x_axis_limits = {
     'qt (MPa)': (0, 50),
     'Rf (%)': (0, 20),

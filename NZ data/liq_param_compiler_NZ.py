@@ -36,6 +36,11 @@ for folder in folder_list:
 
         df = pd.read_excel(filename)
 
+        if df.loc[0]['clay_profile'] == 1 and df.loc[0]['Liquefaction'] == 0:
+            df.at[0, 'exclude'] = 1
+        else:
+            df.at[0, 'exclude'] = 0
+
         site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'stratified', 'clay_profile', 'h1b_sand_percent',
                                 'h1_basic', 'h1_cumulative', 'h2_basic', 'h2_cumulative', 'methods_perform','za', 'zb','LD', 'CR']
 

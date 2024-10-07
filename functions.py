@@ -304,7 +304,7 @@ def soil_parameters(df, site):
             # ---------------------------------end Vs calculation ------------------------------------------------------
 
             # --------------------------------k for permeability -------------------------------------------------------            # Robertson 2010 found in Gregg CPT guide 2015 and 2022
-            if row['Ic'] < 3.27:
+            if row['Ic'] <= 3.27:
                 df.at[i, 'k (m/s)'] = 10 ** (.952 - 3.04 * row['Ic'])
             if 3.27 < row['Ic'] < 4:
                 df.at[i, 'k (m/s)'] = 10 ** (-4.52 - 1.37 * row['Ic'])

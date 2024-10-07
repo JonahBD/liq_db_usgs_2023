@@ -15,6 +15,8 @@ non_liq_sites = 1609
 best_threshold_value = 0
 best_true_rate = 0
 
+iterations = 100
+
 
 
 # linear_predictor = .87908464750829 + -0.0992873354236673 * pca["h1_φ' R (degrees)_median"] + 0.3125294225309 * pca["LPI"] + 0.614696806583199 * pca["PGA"]
@@ -43,9 +45,9 @@ df = compiled.merge(our_method_df, on='site', how='left')
 our_method = 'our_method'
 
 while run_optimizer:
-    for value in range(1,1001):
+    for value in range(1,(iterations+1)):
         df['our_method_binary_results'] = [
-            np.nan if np.isnan(x) else (1 if x > (value / 1000) else 0)
+            np.nan if np.isnan(x) else (1 if x > (value / iterations) else 0)
             for x in df['our_method']
         ]
 
@@ -75,7 +77,7 @@ while run_optimizer:
 
         if combined_true_rate > best_true_rate:
             best_true_rate = combined_true_rate
-            best_threshold_value = value / 1000
+            best_threshold_value = value / iterations
 
     print(f"best true combined rate: {best_true_rate}\n"
           f"best threshold value: {best_threshold_value}\n")
@@ -83,10 +85,10 @@ while run_optimizer:
     run_optimizer = False
 
 while run_target_TP_number:
-    for value in range(1,10001):
+    for value in range(1,iterations+1):
 
         df['our_method_binary_results'] = [
-            np.nan if np.isnan(x) else (1 if x > (value / 10000) else 0)
+            np.nan if np.isnan(x) else (1 if x > (value / iterations) else 0)
             for x in df['our_method']
         ]
         df[f'{our_method}_true_negative'] = 0
@@ -108,7 +110,7 @@ while run_target_TP_number:
                 df.at[index, f'{our_method}_false_positive'] = 1
 
         tp_num = df[f"{our_method}_true_positive"].sum()
-        print(f"TP rate: {tp_num}, threshold value: {value/10000}")
+        print(f"TP rate: {tp_num}, threshold value: {value/iterations}")
         if tp_num <= target_TP_number:
             run_target_TP_number = False
             break
