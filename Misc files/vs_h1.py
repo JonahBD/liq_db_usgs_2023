@@ -5,12 +5,14 @@ import glob, os
 from datetime import datetime
 from tqdm import tqdm
 import time
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 pd.set_option('future.no_silent_downcasting', True)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\Soil Parameters"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data"
+input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\Soil Parameters"
+export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data"
 depth_column_name = "Depth (m)"
 #########################################################
 
@@ -55,16 +57,21 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
             # print(col)
             values = df[col].to_numpy()
             sliced_values = values[0:h1_index]
+            sliced_values[sliced_values < 0] = np.nan
             thickness = h1_thickness
 
             H_over_vs = np.divide(thickness, sliced_values)
             H_over_vs = H_over_vs[np.logical_not(np.isnan(H_over_vs))]
-            Vs_h1_df.at[counter, str(key) + '_' + str(col)] = np.sum(thickness) / (np.sum(H_over_vs))
+            Vs_h1_df.at[counter, str(key) + '_' + str(col)] = np.nanmedian(thickness) * len(H_over_vs) / (np.sum(H_over_vs))
+            # print(np.nanmedian(thickness),len(H_over_vs), (np.sum(H_over_vs)))
 
             # sliced_values[sliced_values == ''] = np.nan
-            # Vs_h1_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
+            Vs_h1_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
             # Vs_h1_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nanmedian(sliced_values)
             # Vs_h1_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
+
+    h1 = df.loc[0]['h1_basic']
+    Vs_h1_df.at[counter, 'Max effective stress'] = df.loc[df[depth_column_name] == h1, 'Effective Stress (kPa)'].iloc[0]
 
     if counter == 30:
         Vs_h1_df.to_excel(fr"{export_folder_path}\Vs_h1_FIRST30.xlsx", index=False)
