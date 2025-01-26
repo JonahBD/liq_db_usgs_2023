@@ -1,18 +1,19 @@
 import pandas as pd
 import numpy as np
 
-compiled = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG\liq_param_compiled_OG_A08.xlsx")
-pca = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG\log_reg_parameters_OG_A08.xlsx")
+compiled = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_OG_A08.xlsx")
+pca = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Model Building 02\All Sites\log_reg_parameters_model_all_MORE.xlsx")
 # pca["h1_φ' R_median_With_Zeros"] = pca["h1_φ' R (degrees)_median"].fillna(0)
 # pca['phi here?'] = [-2.68658450501996 if x == 0 else 2.68658450501996 for x in pca["h1_φ' R_median_With_Zeros"]]
-run_optimizer = False
-run_target_TP_number = True
+run_optimizer = True
+run_target_TP_number = False
 target_TP_number = 115
-method_name = "method 1"
+method_name = "LEPM"
 iterations = 1000
 
 liq_sites = 132
-non_liq_sites = 1609
+# non_liq_sites = 1609
+non_liq_sites = 1983
 
 best_threshold_value = 0
 best_true_rate = 0
@@ -39,7 +40,7 @@ pca['PGA^2'] = pca['PGA']**2
 pca['LPI^2'] = pca['LPI']**2
 
 # method 1: optimal threshold = 0.076, LPI threshold = 0.051
-linear_predictor = -8.92037390038763 + 0.340503730617479 * pca["h2_cumulative"] + 0.0869353182127434 * pca["LPI"] + 11.7649657769085 * pca["PGA"]
+# linear_predictor = -8.92037390038763 + 0.340503730617479 * pca["h2_cumulative"] + 0.0869353182127434 * pca["LPI"] + 11.7649657769085 * pca["PGA"]
 
 # method 2: optimal threshold = 0.105
 # linear_predictor = 10.8878413792518 + 1.17893307442733 * pca["h2_cumulative"] + -0.143842105352312 * pca["H2_cumulative^2"] + 0.153653090183619 * pca["LPI"] + -0.00271557922869899 * pca["LPI^2"] + -105.94413098433 * pca["PGA"] + 158.437015868848 * pca["PGA^2"]
@@ -49,6 +50,13 @@ linear_predictor = -8.92037390038763 + 0.340503730617479 * pca["h2_cumulative"] 
 
 #CHOSEN METHOD (method 2, LPI^2 removed): optimal threshold = 0.097, LPI threshold = 0.039
 # linear_predictor = 10.6792558895584 + 1.40495611982079 * pca["h2_cumulative"] + -0.176140402756966 * pca["H2_cumulative^2"] + 0.0770038726102139 * pca["LPI"] + -105.035269005498 * pca["PGA"] + 158.093503861048 * pca["PGA^2"]
+
+#LPI
+# linear_predictor =  -4.14426634838716 + 0.198557354736245 * pca["LPI"]
+
+#LEPM
+linear_predictor = -0.389496479708949 * pca["h1_basic"] + -0.0224933862867034 * pca["h1_Vs M (m/s)_mean"] + 0.163801232292651 * pca["LPI"] + 0.0416527762192667 * pca["Max effective stress"]
+
 
 pca[f"{method_name}"] = np.exp(linear_predictor) / (1 + np.exp(linear_predictor))
 
@@ -135,4 +143,4 @@ print(f"You entered: {user_input}")
 df[f'{method_name}_binary_results'] = [1 if x > user_input else 0 for x in df[f'{method_name}']]
 
 # print(compiled['our_method'])
-df.to_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_vs_method1_optimal_threshold.xlsx", index=False)
+df.to_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_LEPM_optimal_threshold.xlsx", index=False)

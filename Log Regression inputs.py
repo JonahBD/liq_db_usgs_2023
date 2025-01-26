@@ -12,11 +12,11 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # time.sleep(60*60*9)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data\Soil Parameters"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT, OG\OG Data"
+input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG\Soil Parameters"
+export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG"
 depth_column_name = "Depth (m)"
-name = "OG_more_vals"
-attempt_number = "A07"
+name = "OG"
+attempt_number = "A08"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'

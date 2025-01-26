@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
-df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 07 - OG\OG Data\liq_param_compiled_vs_method.xlsx"
-                   ) #Takes in liq_param_compiled file
+df = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_methods_performance_OG_LEPM_optimal_threshold_without_clay_A08.xlsx"
+                   )
 methods = [
     {
         'column': 'LPI',
@@ -38,13 +38,18 @@ methods = [
         "color":'k'
     }
     ,{
-        'column': 'our_method',
-        'label': "LϕI",
+        'column': 'LEPM',
+        'label': "LEPM",
         "color":'#ffaa00'
     }
         ]
          # 'LPIish_basic', 'LSN', 'LD_and_CR_binary_results', 'ishihara_curve_basic_results', 'ishihara_curve_cumulative_results', 'towhata_basic_results']
 # method_results = f'{method}_results'
+
+custom_order = [
+    'LPI', 'LPIish', 'LSN', 'Hutabarat and Bray',
+    'Ishihara Basic', 'Ishihara Cumulative', 'Towhata', 'LEPM'
+]
 
 y_true = df["Liquefaction"].to_numpy()
 for m in methods:

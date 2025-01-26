@@ -6,11 +6,11 @@ from sklearn.metrics import cohen_kappa_score
 # time.sleep(60*20)
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 02\LSN 10 stuff\liq_param_compiled_2011_soil_parameter_7-29.xlsx"
-export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\NZ data\Attempt 02\LSN 10 stuff"
+input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
+export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data"
 exclude_clay_sites = True
-name = "10-100"
-attempt_number = "A05"
+name = "OG_LEPM_optimal_threshold"
+attempt_number = "A08"
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -18,13 +18,16 @@ date = f'{today_date.month}-{today_date.day}'
 df = pd.read_excel(input_file_path)
 results = pd.DataFrame()
 
+df['LPI_results'] = 0 # TODO: should this be taken out? I think it was included for something specific?
+df['LPI_results'] = [1 if x > 8 else 0 for x in df['LPI']]
+
 # for index, row in df.iterrows():
 #     if row['clay_profile'] == 1 and row['Liquefaction'] == 0:
 #         df.at[index, 'exclude'] = 1
 #     else:
 #         df.at[index, 'exclude'] = 0
 
-if exclude_clay_sites:
+if exclude_clay_sites: # TODO: uncomment this back out
     df = df[df['exclude'] == 0]
 
 for column in df.columns[1:]:
