@@ -25,9 +25,9 @@ GWT_zero_nan = []
 LD_not_working = []
 #Takes about 5 hours and 10 mintues to run on 2115 files
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Raw Data\OG 2-14"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 06 - GWT\OG Data\Soil Parameters"
-vals_pga_and_liq = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\PGA-liq values 02 13 23.xlsx"
+input_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\testing"
+export_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
+vals_pga_and_liq = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################

@@ -6,9 +6,9 @@ from sklearn.metrics import cohen_kappa_score
 # time.sleep(60*20)
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
-export_file_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data"
-exclude_clay_sites = True
+input_file_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
+export_file_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data"
+exclude_clay_sites = False
 name = "OG_LEPM_optimal_threshold"
 attempt_number = "A08"
 #########################################################
@@ -18,8 +18,9 @@ date = f'{today_date.month}-{today_date.day}'
 df = pd.read_excel(input_file_path)
 results = pd.DataFrame()
 
-df['LPI_results'] = 0 # TODO: should this be taken out? I think it was included for something specific?
-df['LPI_results'] = [1 if x > 8 else 0 for x in df['LPI']]
+# The next two lines set LPI's optimal threshold value for use when deciding if a site liqed or not
+df['LPI_results'] = 0
+df['LPI_results'] = [1 if x > 7.92133 else 0 for x in df['LPI']]
 
 # for index, row in df.iterrows():
 #     if row['clay_profile'] == 1 and row['Liquefaction'] == 0:

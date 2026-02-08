@@ -12,8 +12,8 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # time.sleep(60*60*9)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG\Soil Parameters"
-export_folder_path = r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG"
+input_folder_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data\Soil Parameters"
+export_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
 depth_column_name = "Depth (m)"
 name = "OG"
 attempt_number = "A08"
@@ -88,21 +88,23 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     for col in pca_parameters_col:
         for (key, value) in index_dict.items():
             # print(col)
-            values = df[col].to_numpy()
+            values = pd.to_numeric(df[col], errors='coerce').to_numpy()
 
             if value == h1_index and key != 'h2':
-                sliced_values = values[0:h1_index]
+                sliced_values = values[0:h1_index].copy()
                 thickness = h1_thickness
             else:
-                sliced_values = values[h1_index:h2_index]
+                sliced_values = values[h1_index:h2_index].copy()
                 thickness = h2_thickness
-            # print(col)
-            if str(col) == "k (m/s)":
-                H_over_k = np.divide(thickness, sliced_values)
-                H_over_k = H_over_k[np.logical_not(np.isnan(H_over_k))]
-                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_equivalent"] = h1_depth / (np.sum(H_over_k))
 
-            sliced_values[sliced_values == ''] = np.nan
+            # Hydraulic conductivity special case
+            if col == "k (m/s)":
+                H_over_k = thickness / sliced_values
+                H_over_k = H_over_k[~np.isnan(H_over_k)]
+                if len(H_over_k) > 0:
+                    pca_parameters_df.at[counter, f"{key}_{col}_equivalent"] = h1_depth / np.sum(H_over_k)
+                else:
+                    pca_parameters_df.at[counter, f"{key}_{col}_equivalent"] = np.nan
 
             if h1_index == h2_index and key=='h2':
                 pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nan

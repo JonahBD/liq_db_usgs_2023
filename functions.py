@@ -445,10 +445,12 @@ def PGA_insertion(df, PGA_filepath, site):
     if pga_df.loc[site]['PGA_20may'] > pga_df.loc[site]['PGA_29may']:
         df.at[0, 'PGA'] = pga_df.loc[site]['PGA_20may']
         df.at[0,"EQ"] = "20_may"
+        df["EQ"] = df["EQ"].astype(object)
         df.at[1,"EQ"] = 6.1
     else:
         df.at[0, 'PGA'] = pga_df.loc[site]['PGA_29may'] # NOTE: change this back to 29may when not comparing with cliq files
         df.at[0, "EQ"] = "29_may"
+        df["EQ"] = df["EQ"].astype(object)
         df.at[1, "EQ"] = 5.9
     # df.at[0, 'PGA_20may'] = pga_df.loc[site]['PGA_20may']
     # df.at[0, 'PGA_29may'] = pga_df.loc[site]['PGA_29may']

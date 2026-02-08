@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-compiled = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_OG_A08.xlsx")
+compiled = pd.read_excel(r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_OG_A08.xlsx")
 pca = pd.read_excel(r"C:\Users\jdundas2\OneDrive - Brigham Young University\Liq\Italy Data\Model Building 02\All Sites\log_reg_parameters_model_all_MORE.xlsx")
 # pca["h1_φ' R_median_With_Zeros"] = pca["h1_φ' R (degrees)_median"].fillna(0)
 # pca['phi here?'] = [-2.68658450501996 if x == 0 else 2.68658450501996 for x in pca["h1_φ' R_median_With_Zeros"]]
