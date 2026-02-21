@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
-df = pd.read_excel(r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_methods_performance_OG_LEPM_optimal_threshold_without_clay_A08.xlsx"
+df = pd.read_excel(r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_methods_performance_OG_LEPM_optimal_threshold_without_clay_A08.xlsx"
                    )
 methods = [
     {

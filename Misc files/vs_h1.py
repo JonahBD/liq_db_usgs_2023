@@ -8,11 +8,11 @@ import time
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-pd.set_option('future.no_silent_downcasting', True)
+# pd.set_option('future.no_silent_downcasting', True)
 
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data\Soil Parameters"
-export_folder_path = r"C:\Users\hf233\OneDrive - Brigham Young University\Liq\Italy Data\Attempt 08 - OG\OG Data"
+input_folder_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data\Soil Parameters"
+export_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
 depth_column_name = "Depth (m)"
 #########################################################
 
@@ -55,8 +55,9 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
     for col in ["Vs M (m/s)", "Vs R (m/s)"]:
         for (key, value) in index_dict.items():
             # print(col)
-            values = df[col].to_numpy()
-            sliced_values = values[0:h1_index]
+            values = df[col].to_numpy(copy=True)
+            sliced_values = values[0:h1_index].copy()
+            sliced_values = sliced_values.astype(float, copy=False)
             sliced_values[sliced_values < 0] = np.nan
             thickness = h1_thickness
 

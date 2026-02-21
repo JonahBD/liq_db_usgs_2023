@@ -6,9 +6,9 @@ from sklearn.metrics import cohen_kappa_score
 # time.sleep(60*20)
 
 ################ USER INPUTS ############################
-input_file_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
-export_file_path = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\Attempt 08 - OG\OG Data"
-exclude_clay_sites = False
+input_file_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
+export_file_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
+exclude_clay_sites = True
 name = "OG_LEPM_optimal_threshold"
 attempt_number = "A08"
 #########################################################

@@ -35,10 +35,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = pd.read_excel(filename)
 
-    if df.loc[0]['clay_profile'] == 1 and df.loc[0]['Liquefaction'] == 0:
-        df.at[0, 'exclude'] = 1
-    else:
-        df.at[0, 'exclude'] = 0 # TODO: delete this chunk later. The files i'm currently running don't have an exclude column, but the main.py files have been updated to calculate this there
+    # if df.loc[0]['clay_profile'] == 1 and df.loc[0]['Liquefaction'] == 0:
+    #     df.at[0, 'exclude'] = 1
+    # else:
+    #     df.at[0, 'exclude'] = 0 # TODO: delete this chunk later. The files i'm currently running don't have an exclude column, but the main.py files have been updated to calculate this there
 
     site_characteristics = ['PGA', 'Liquefaction', 'GWT [m]', 'lat_wgs84', 'lon_wgs84', 'stratified', 'clay_profile','exclude', 'h1b_sand_percent',
                             'h1_basic', 'h1_cumulative', 'h2_basic', 'h2_cumulative', 'methods_perform', 'za', 'zb','LD', 'CR']

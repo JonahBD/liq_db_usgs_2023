@@ -25,9 +25,9 @@ GWT_zero_nan = []
 LD_not_working = []
 #Takes about 5 hours and 10 mintues to run on 2115 files
 ################ USER INPUTS ############################
-input_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\testing"
-export_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
-vals_pga_and_liq = r"C:\Users\jonah\OneDrive\BYU Onedrive\Liq\Italy Data\PGA-liq values 02 13 23.xlsx"
+input_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\Raw CPT Data - OG 2-14 02"
+export_folder_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\Soil Parameters"
+vals_pga_and_liq = r"C:\Users\jonah\OneDrive\Finalized Liq Data\PGA-liq values 02 13 23.xlsx"
 date_column_name = 'Date of CPT [gg/mm/aa]'
 depth_column_name = "Depth (m)"
 #########################################################
@@ -47,6 +47,13 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
 
     df = pd.read_excel(filename)
 
+    # Convert the entire date column to datetime (handles "-" and blanks)
+    df[date_column_name] = pd.to_datetime(
+        df[date_column_name].replace("-", pd.NA),
+        errors="coerce",
+        dayfirst=True
+    )
+
     if df.loc[0]['GWT [m]'] == 0 or df.loc[0]['GWT [m]'] == float('NaN'):
         GWT_zero_nan.append(site)
 
@@ -64,10 +71,10 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
         GWT_or_preforo_wrong_type.append(site)
         continue
 
-    if isinstance(date,pd.Timestamp):
-        df.at[0, date_column_name] = date
-    else:
-        df.at[0, date_column_name] = pd.to_datetime(date, dayfirst=True)
+    # if isinstance(date,pd.Timestamp):
+    #     df.at[0, date_column_name] = date
+    # else:
+    #     df.at[0, date_column_name] = pd.to_datetime(date, dayfirst=True)
 
     export_folder_path_df = os.path.join(export_folder_path,site + '.xlsx')
 

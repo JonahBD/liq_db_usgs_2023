@@ -467,6 +467,7 @@ def FS_liq(df):  # FS equation from Idriss and Boulanger 2008
     df = pd.concat([df, df_new_columns], axis=1)
 
     if df.loc[0]["GWT [m]"] < df.loc[0]['preforo [m]']:
+        df["preforo [m]"] = df["preforo [m]"].astype("object")
         df.at[1, 'preforo [m]'] = 'preforo is below GWT'
 
     # FSliq part
