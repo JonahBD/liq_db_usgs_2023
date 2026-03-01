@@ -107,15 +107,15 @@ for filename in glob.glob(os.path.join(input_folder_path, "*.xls*")):
                     pca_parameters_df.at[counter, f"{key}_{col}_equivalent"] = np.nan
 
             if h1_index == h2_index and key=='h2':
-                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nan
+                # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nan
                 pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nan
-                pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nan
+                # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nan
             else:
                 # try:
                 # sliced_values = sliced_values[~np.isnan(sliced_values)]
-                    pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
+                #     pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_mean"] = np.nanmean(sliced_values)
                     pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_median"] = np.nanmedian(sliced_values)
-                    pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
+                    # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_std"] = np.nanstd(sliced_values)
                 # except TypeError:
                 #     pass
             # pca_parameters_df.at[counter, str(key) + '_' + str(col) + "_skew"] = scipy.stats.skew(sliced_values, nan_policy='omit')

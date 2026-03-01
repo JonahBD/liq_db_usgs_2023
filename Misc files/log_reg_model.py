@@ -3,7 +3,7 @@ import numpy as np
 
 ##################### USER INPUTS ##############################
 file_path_to_liq_param_compiled = r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_OG_A08.xlsx"
-file_path_to_log_reg_parameters = r"C:\Users\jonah\OneDrive\Finalized Liq Data\log_reg_parameters_OG_A08_MORE.xlsx"
+file_path_to_log_reg_parameters = r"C:\Users\jonah\OneDrive\Finalized Liq Data\log_reg_parameters_OG_A08.xlsx"
 export_file_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
 run_optimizer = True
 run_target_TP_number = False
