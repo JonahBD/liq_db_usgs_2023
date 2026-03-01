@@ -1,22 +1,29 @@
 import pandas as pd
 import numpy as np
 
-compiled = pd.read_excel(r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_OG_A08.xlsx")
-pca = pd.read_excel(r"C:\Users\jonah\OneDrive\Finalized Liq Data\log_reg_parameters_OG_A08_MORE.xlsx")
-# pca["h1_φ' R_median_With_Zeros"] = pca["h1_φ' R (degrees)_median"].fillna(0)
-# pca['phi here?'] = [-2.68658450501996 if x == 0 else 2.68658450501996 for x in pca["h1_φ' R_median_With_Zeros"]]
+##################### USER INPUTS ##############################
+file_path_to_liq_param_compiled = r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_OG_A08.xlsx"
+file_path_to_log_reg_parameters = r"C:\Users\jonah\OneDrive\Finalized Liq Data\log_reg_parameters_OG_A08_MORE.xlsx"
+export_file_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_LEPM_optimal_threshold.xlsx"
 run_optimizer = True
 run_target_TP_number = False
 target_TP_number = 115
 method_name = "LEPM"
 iterations = 1000
-
 liq_sites = 132
-# non_liq_sites = 1609
+
+# When considering all sites (including clay profiles):
 non_liq_sites = 1983
+
+# When excluding clay profiles:
+# non_liq_sites = 1609
+################################################################
 
 best_threshold_value = 0
 best_true_rate = 0
+
+compiled = pd.read_excel(file_path_to_liq_param_compiled)
+pca = pd.read_excel(file_path_to_log_reg_parameters)
 
 # linear_predictor = .87908464750829 + -0.0992873354236673 * pca["h1_φ' R (degrees)_median"] + 0.3125294225309 * pca["LPI"] + 0.614696806583199 * pca["PGA"]
 # linear_predictor = 1.93313846917024 + -0.0915855869567442 * pca["h1_φ' R (degrees)_median"] + 0.298505612181314 * pca["LPI"]
@@ -60,38 +67,38 @@ linear_predictor = -0.389496479708949 * pca["h1_basic"] + -0.0224933862867034 * 
 
 pca[f"{method_name}"] = np.exp(linear_predictor) / (1 + np.exp(linear_predictor))
 
-our_method_df = pca[['site',f'{method_name}']]
+method_df = pca[['site',f'{method_name}']]
 
-df = compiled.merge(our_method_df, on='site', how='left')
-our_method = f'{method_name}'
+df = compiled.merge(method_df, on='site', how='left')
+method = f'{method_name}'
 
 while run_optimizer:
     for value in range(1,iterations+1):
-        df['our_method_binary_results'] = [
+        df[f'{method_name}_binary_results'] = [
             np.nan if np.isnan(x) else (1 if x > (value / iterations) else 0)
             for x in df[f'{method_name}']
         ]
 
-        df[f'{our_method}_true_negative'] = 0
-        df[f'{our_method}_false_negative'] = 0
-        df[f'{our_method}_true_positive'] = 0
-        df[f'{our_method}_false_positive'] = 0
+        df[f'{method}_true_negative'] = 0
+        df[f'{method}_false_negative'] = 0
+        df[f'{method}_true_positive'] = 0
+        df[f'{method}_false_positive'] = 0
 
         for index, row in df.iterrows():
-            our_val = row['our_method_binary_results']
+            our_val = row[f'{method_name}_binary_results']
             liq_val = row["Liquefaction"]  # _italy
 
             if liq_val == 0 and our_val == 0:
-                df.at[index, f'{our_method}_true_negative'] = 1
+                df.at[index, f'{method}_true_negative'] = 1
             elif liq_val == 1 and our_val == 0:
-                df.at[index, f'{our_method}_false_negative'] = 1
+                df.at[index, f'{method}_false_negative'] = 1
             elif liq_val == 1 and our_val == 1:
-                df.at[index, f'{our_method}_true_positive'] = 1
+                df.at[index, f'{method}_true_positive'] = 1
             elif liq_val == 0 and our_val == 1:
-                df.at[index, f'{our_method}_false_positive'] = 1
+                df.at[index, f'{method}_false_positive'] = 1
 
-        tp_rate = df[f"{our_method}_true_positive"].sum() / liq_sites
-        tn_rate = df[f"{our_method}_true_negative"].sum()/non_liq_sites
+        tp_rate = df[f"{method}_true_positive"].sum() / liq_sites
+        tn_rate = df[f"{method}_true_negative"].sum()/non_liq_sites
 
         combined_true_rate = (tp_rate + tn_rate) / 2
         # print(combined_true_rate, best_true_rate)
@@ -113,25 +120,25 @@ while run_target_TP_number:
             np.nan if np.isnan(x) else (1 if x > (value / iterations) else 0)
             for x in df[f'{method_name}']
         ]
-        df[f'{our_method}_true_negative'] = 0
-        df[f'{our_method}_false_negative'] = 0
-        df[f'{our_method}_true_positive'] = 0
-        df[f'{our_method}_false_positive'] = 0
+        df[f'{method}_true_negative'] = 0
+        df[f'{method}_false_negative'] = 0
+        df[f'{method}_true_positive'] = 0
+        df[f'{method}_false_positive'] = 0
 
         for index, row in df.iterrows():
             our_val = row[f'{method_name}_binary_results']
             liq_val = row["Liquefaction"]  # _italy
 
             if liq_val == 0 and our_val == 0:
-                df.at[index, f'{our_method}_true_negative'] = 1
+                df.at[index, f'{method}_true_negative'] = 1
             elif liq_val == 1 and our_val == 0:
-                df.at[index, f'{our_method}_false_negative'] = 1
+                df.at[index, f'{method}_false_negative'] = 1
             elif liq_val == 1 and our_val == 1:
-                df.at[index, f'{our_method}_true_positive'] = 1
+                df.at[index, f'{method}_true_positive'] = 1
             elif liq_val == 0 and our_val == 1:
-                df.at[index, f'{our_method}_false_positive'] = 1
+                df.at[index, f'{method}_false_positive'] = 1
 
-        tp_num = df[f"{our_method}_true_positive"].sum()
+        tp_num = df[f"{method}_true_positive"].sum()
         print(f"TP rate: {tp_num}, threshold value: {value/iterations}")
         if tp_num <= target_TP_number:
             run_target_TP_number = False
@@ -142,5 +149,5 @@ print(f"You entered: {user_input}")
 
 df[f'{method_name}_binary_results'] = [1 if x > user_input else 0 for x in df[f'{method_name}']]
 
-# print(compiled['our_method'])
-df.to_excel(r"C:\Users\jonah\OneDrive\Finalized Liq Data\liq_param_compiled_LEPM_optimal_threshold.xlsx", index=False)
+# print(compiled['method'])
+df.to_excel(export_file_path, index=False)

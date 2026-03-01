@@ -11,6 +11,8 @@ export_file_path = r"C:\Users\jonah\OneDrive\Finalized Liq Data"
 exclude_clay_sites = True
 name = "OG_LEPM_optimal_threshold"
 attempt_number = "A08"
+LPI_threshold_value = 7.92133
+#LPI optimal threshold value has been calculated to be 7.92133
 #########################################################
 today_date = date.today()
 date = f'{today_date.month}-{today_date.day}'
@@ -20,7 +22,7 @@ results = pd.DataFrame()
 
 # The next two lines set LPI's optimal threshold value for use when deciding if a site liqed or not
 df['LPI_results'] = 0
-df['LPI_results'] = [1 if x > 7.92133 else 0 for x in df['LPI']]
+df['LPI_results'] = [1 if x > LPI_threshold_value else 0 for x in df['LPI']]
 
 # for index, row in df.iterrows():
 #     if row['clay_profile'] == 1 and row['Liquefaction'] == 0:
@@ -28,7 +30,7 @@ df['LPI_results'] = [1 if x > 7.92133 else 0 for x in df['LPI']]
 #     else:
 #         df.at[index, 'exclude'] = 0
 
-if exclude_clay_sites: # TODO: uncomment this back out
+if exclude_clay_sites:
     df = df[df['exclude'] == 0]
 
 for column in df.columns[1:]:
